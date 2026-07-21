@@ -1,0 +1,1 @@
+print("Ambiente pronto. Hora de construir.")
