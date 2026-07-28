@@ -7,3 +7,10 @@ services:
       POSTGRES_DB: smb_demo
     ports:
       - "5432:5432"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
