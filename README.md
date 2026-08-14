@@ -89,6 +89,7 @@ python painel.py
 - [ ] Outros agentes candidatos documentados: Cost/FinOps, Security & Patch Compliance,
       Deployment Health, Infra-as-Code Review, Documentation/Runbook
 - [ ] Empacotar como pacote pip instalável
+    Especificação detalhada dos próximos agentes em [`AGENTES_ROADMAP.md`](AGENTES_ROADMAP.md).
 
 ## Aprendizado
 
