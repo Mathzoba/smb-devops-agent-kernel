@@ -39,3 +39,9 @@ agente (Backup), quando vou tentar escrever primeiro, antes de pedir ajuda.
 Criei um script que lista as sugestões pendentes filtrando por status ('pendente') e
 formatando pra leitura. Aprendi a usar WHERE num SELECT pra filtrar linhas, em vez de
 sempre trazer a tabela inteira.
+
+## Terceiro agente - fonte de dado via API HTTP (dd/mm/aaaa)
+Conectei o Prometheus usando a biblioteca requests, consultando a API HTTP dele (diferente
+do padrão SQL usado nos outros agentes). Só o perceive() mudou - plan() e act() continuam
+idênticos aos outros agentes. Isso prova que o kernel realmente não se importa com a fonte
+do dado, só com o formato que cada agente devolve.
