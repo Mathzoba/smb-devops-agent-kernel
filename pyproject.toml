@@ -1,0 +1,19 @@
+[project]
+name = "smb-devops-agent-kernel"
+version = "0.1.0"
+description = "Base multiagente customizavel para automacao de operacoes (DevOps) em pequenas e medias empresas"
+authors = [{name = "Matheus Arazin"}]
+requires-python = ">=3.12"
+dependencies = [
+    "groq",
+    "psycopg2-binary",
+    "python-dotenv",
+    "requests",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["kernel"]
