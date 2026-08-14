@@ -14,8 +14,6 @@ cur.execute(
     "FROM sugestoes_pendentes WHERE status = 'pendente' ORDER BY criado_em DESC;"
 )
 sugestoes = cur.fetchall()
-cur.close()
-conn.close()
 
 if not sugestoes:
     print("Nenhuma sugestão pendente.")
@@ -27,3 +25,20 @@ else:
         print(sugestao)
     print("=" * 60)
     print(f"Total: {len(sugestoes)} sugestão(ões) pendente(s).")
+
+    escolha = input("\nDigite o número da sugestão pra revisar (ou Enter pra sair): ")
+
+    if escolha.strip():
+        id_escolhido = int(escolha)
+        decisao = input("Aprovar (a) ou rejeitar (r)? ").strip().lower()
+        novo_status = "aprovado" if decisao == "a" else "rejeitado"
+
+        cur.execute(
+            "UPDATE sugestoes_pendentes SET status = %s WHERE id = %s;",
+            (novo_status, id_escolhido),
+        )
+        conn.commit()
+        print(f"Sugestão #{id_escolhido} marcada como '{novo_status}'.")
+
+cur.close()
+conn.close()
