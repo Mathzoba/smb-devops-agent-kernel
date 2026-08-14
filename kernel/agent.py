@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import psycopg2
 
 
 class Agent(ABC):
@@ -31,3 +32,20 @@ class Agent(ABC):
         contexto = self.perceive()
         plano = self.plan(contexto)
         self.act(plano)
+
+    def registrar_sugestao(self, texto: str) -> None:
+        conn = psycopg2.connect(
+            host="localhost",
+            port=5432,
+            user="demo",
+            password="demo123",
+            dbname="smb_demo",
+        )
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO sugestoes_pendentes (agente, sugestao) VALUES (%s, %s);",
+            (self.nome, texto),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
