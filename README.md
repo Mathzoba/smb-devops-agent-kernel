@@ -77,6 +77,12 @@ python agente_backup.py
 python painel.py
 ```
 
+O `kernel` também pode ser instalado como pacote (modo editável), pra ser reaproveitado em
+outros projetos:
+```bash
+pip install -e .
+```
+
 ## Status e próximos passos
 
 - [x] Ambiente-demo (Postgres, Prometheus, Grafana) via Docker
