@@ -33,9 +33,11 @@ lógica específica — o ciclo de execução (`run()`) e o registro de sugestõ
   banco, aponta causa provável e próximo passo.
 - **Agente de Backup & DR Verification** (`agente_backup.py`) — lê o status das rotinas de
   backup simuladas, aponta falhas e sugere ação.
+- **Agente de Infraestrutura** (`agente_infra.py`) — consulta métricas do Prometheus (via
+  API HTTP) e reporta a saúde dos serviços monitorados.
 
-Todas as sugestões geradas ficam registradas na tabela `sugestoes_pendentes` e podem ser
-revisadas de uma vez com `painel.py`.
+Todas as sugestões geradas ficam registradas na tabela `sugestoes_pendentes`, podem ser
+revisadas com `painel.py`, e aprovadas ou rejeitadas diretamente por ali..
 
 ## Stack
 
@@ -81,13 +83,12 @@ python painel.py
 - [x] Kernel com contrato perceive/plan/act
 - [x] Agente de Triagem de Incidentes
 - [x] Agente de Backup & DR Verification
+- [x] Agente de Infraestrutura (via Prometheus)
 - [x] Registro compartilhado de sugestões + painel de revisão
-- [ ] Conectar métricas do Prometheus a algum agente (hoje ele está no ar, mas nenhum agente
-      ainda o consulta)
-- [ ] Fluxo de aprovação/rejeição real das sugestões (hoje só lista, não marca como
-      aprovado)
+- [x] Fluxo de aprovação/rejeição das sugestões
 - [ ] Outros agentes candidatos documentados: Cost/FinOps, Security & Patch Compliance,
       Deployment Health, Infra-as-Code Review, Documentation/Runbook
+- [ ] Empacotar como pacote pip instalável
 
 ## Aprendizado
 
