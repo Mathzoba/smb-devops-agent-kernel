@@ -1,16 +1,17 @@
 import psycopg2
+from kernel.config import settings
 
 conn = psycopg2.connect(
-    host="localhost",
-    port=5432,
-    user="demo",
-    password="demo123",
-    dbname="smb_demo",
+    host=settings.PG_HOST,
+    port=settings.PG_PORT,
+    user=settings.PG_USER,
+    password=settings.PG_PASSWORD,
+    dbname=settings.PG_DATABASE,
 )
 cur = conn.cursor()
 
 cur.execute(
-    "SELECT id, criado_em, agente, sugestao "
+    "SELECT id, criado_em, agente, causa_provavel, confianca, proxima_acao "
     "FROM sugestoes_pendentes WHERE status = 'pendente' ORDER BY criado_em DESC;"
 )
 sugestoes = cur.fetchall()
@@ -18,11 +19,13 @@ sugestoes = cur.fetchall()
 if not sugestoes:
     print("Nenhuma sugestão pendente.")
 else:
-    for id_, criado_em, agente, sugestao in sugestoes:
+    for id_, criado_em, agente, causa_provavel, confianca, proxima_acao in sugestoes:
         print("=" * 60)
         print(f"#{id_} | {agente} | {criado_em}")
         print("-" * 60)
-        print(sugestao)
+        print(f"Causa provável: {causa_provavel}")
+        print(f"Confiança: {confianca}")
+        print(f"Próxima ação: {proxima_acao}")
     print("=" * 60)
     print(f"Total: {len(sugestoes)} sugestão(ões) pendente(s).")
 

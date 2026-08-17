@@ -1,3 +1,5 @@
+from kernel.schemas import Finding
+from kernel.config import settings
 from abc import ABC, abstractmethod
 import psycopg2
 
@@ -33,18 +35,22 @@ class Agent(ABC):
         plano = self.plan(contexto)
         self.act(plano)
 
-    def registrar_sugestao(self, texto: str) -> None:
+    from kernel.schemas import Finding
+# ... resto dos imports que já existem
+
+    def registrar_sugestao(self, finding: Finding) -> None:
         conn = psycopg2.connect(
-            host="localhost",
-            port=5432,
-            user="demo",
-            password="demo123",
-            dbname="smb_demo",
+            host=settings.PG_HOST,
+            port=settings.PG_PORT,
+            user=settings.PG_USER,
+            password=settings.PG_PASSWORD,
+            dbname=settings.PG_DATABASE,
         )
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO sugestoes_pendentes (agente, sugestao) VALUES (%s, %s);",
-            (self.nome, texto),
+            "INSERT INTO sugestoes_pendentes (agente, causa_provavel, confianca, proxima_acao) "
+            "VALUES (%s, %s, %s, %s);",
+            (self.nome, finding.causa_provavel, finding.confianca, finding.proxima_acao),
         )
         conn.commit()
         cur.close()
