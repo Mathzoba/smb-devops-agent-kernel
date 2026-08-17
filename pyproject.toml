@@ -17,3 +17,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["kernel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
