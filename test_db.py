@@ -1,11 +1,12 @@
 import psycopg2
+from kernel.config import settings
 
 conn = psycopg2.connect(
-    host="localhost",
-    port=5432,
-    user="demo",
-    password="demo123",
-    dbname="smb_demo",
+    host=settings.PG_HOST,
+    port=settings.PG_PORT,
+    user=settings.PG_USER,
+    password=settings.PG_PASSWORD,
+    dbname=settings.PG_DATABASE,
 )
 cur = conn.cursor()
 
