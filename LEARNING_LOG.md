@@ -45,3 +45,21 @@ Conectei o Prometheus usando a biblioteca requests, consultando a API HTTP dele 
 do padrão SQL usado nos outros agentes). Só o perceive() mudou - plan() e act() continuam
 idênticos aos outros agentes. Isso prova que o kernel realmente não se importa com a fonte
 do dado, só com o formato que cada agente devolve.
+
+## Aprendizado de segurança
+Com a senha espalhada em 8 arquivos, bastava esquecer de atualizar 1 deles pra criar inconsistência ou vazar credencial num commit futuro. Com um único config.py, existe um só lugar pra proteger, revisar e trocar. 
+
+O erro do modelo do Groq só apareceu pois antes os arquivos agente_backup.py e agente_infra.py já tinham código pronto há um tempo, mas ninguém tinha executado pra confirmar que ainda funcionavam. código que não roda não é código que funciona 
+
+## Bug Tool
+A PostgresQueryTool não sabe (nem precisa saber) se a query é sobre backups ou alertas — ela só devolve linhas. Quem traduz isso pro vocabulário do agente é o perceive() de cada um."
+
+Query é o pedido que você manda pro banco de dados pedindo um dado específico
+
+## Outputs estruturados — Finding (17/08/2026)
+
+Antes, os agentes devolviam a sugestão como um texto solto, tipo um parágrafo que só um humano lia. Isso funcionava pra aprovar no painel, mas não dava pra comparar sugestões entre si, filtrar por gravidade ou medir se o agente estava acertando ao longo do tempo — era só string, não dado.
+
+Com o `Finding` (causa_provavel, confianca, proxima_acao), a IA agora responde em JSON, e esse JSON vira um objeto Python de verdade, salvo em colunas separadas no banco. Isso é o que permite, no futuro, perguntas tipo "quantas sugestões de alta confiança foram aprovadas?" — coisa que com texto livre seria impossível responder sem reler tudo manualmente.
+
+Um ponto importante que discutimos: o campo `confianca` não é uma métrica calculada de verdade — é a própria IA "achando" o quanto ela confia na resposta dela, sem checar nada de fato. Isso é uma limitação conhecida dos modelos de linguagem, não um bug meu. Por enquanto esse campo é uma hipótese: a gente ainda não sabe se "alta confiança" realmente significa "mais correto". É pra isso que vai servir o Eval Harness mais pra frente — comparar, com dados reais, se esse número significa alguma coisa ou se é só decoração.

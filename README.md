@@ -97,8 +97,13 @@ pip install -e .
 - [ ] Empacotar como pacote pip instalável
     Especificação detalhada dos próximos agentes em [`AGENTES_ROADMAP.md`](AGENTES_ROADMAP.md).
 
+    ## Segurança / Configuração
+
+Todas as credenciais (Postgres, Groq) são lidas de variáveis de ambiente via `kernel/config.py`, nunca hardcoded no código. Para rodar localmente, copie `.env.example` para `.env` e preencha os valores.
+
 ## Aprendizado
 
 Este foi meu primeiro projeto de IA aplicada, construído do zero — incluindo Python, Docker,
 Git e os fundamentos de agentes de LLM. Decisões e processo de aprendizado documentados em
 `LEARNING_LOG.md`.
+
