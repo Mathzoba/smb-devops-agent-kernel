@@ -39,3 +39,13 @@
 **Evidência/justificativa:** item explícito do Stage 1 do blueprint; pré-requisito do Eval Harness (Stage 3), que precisa comparar sugestões de forma automatizada, não só ler texto.
 
 **Limitação conhecida e registrada:** o campo `confianca` é autoavaliação do modelo, não uma métrica calibrada — não há hoje evidência de que "alta confiança" correlaciona com sugestões corretas. É exatamente isso que o Eval Harness vai medir mais pra frente.
+
+## 2026-08-17 — Testes automatizados básicos (fecha Stage 1)
+
+**Contexto:** o projeto não tinha nenhum teste automatizado; toda verificação era manual, rodando cada agente e lendo a saída.
+
+**Decisão:** introduzir pytest, restrito à pasta `tests/` (via `testpaths` no `pyproject.toml`) para não colidir com os scripts legados `test_*.py` da raiz, que não são testes automatizados de verdade. Primeiro teste cobre o contrato mais crítico do projeto: `Agent.run()` chama `perceive/plan/act` em ordem — sem depender de banco, API ou infraestrutura externa.
+
+**Evidência/justificativa:** critério de aceite explícito do Stage 1; dois bugs reais nesta sessão (indentação quebrando métodos abstratos) só foram pegos rodando manualmente — um teste automatizado pegaria isso sem depender de lembrar de rodar.
+
+**Efeito:** Stage 1 (Kernel Trust Foundation) do blueprint está completo.

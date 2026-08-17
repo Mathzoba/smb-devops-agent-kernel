@@ -63,3 +63,7 @@ Antes, os agentes devolviam a sugestão como um texto solto, tipo um parágrafo 
 Com o `Finding` (causa_provavel, confianca, proxima_acao), a IA agora responde em JSON, e esse JSON vira um objeto Python de verdade, salvo em colunas separadas no banco. Isso é o que permite, no futuro, perguntas tipo "quantas sugestões de alta confiança foram aprovadas?" — coisa que com texto livre seria impossível responder sem reler tudo manualmente.
 
 Um ponto importante que discutimos: o campo `confianca` não é uma métrica calculada de verdade — é a própria IA "achando" o quanto ela confia na resposta dela, sem checar nada de fato. Isso é uma limitação conhecida dos modelos de linguagem, não um bug meu. Por enquanto esse campo é uma hipótese: a gente ainda não sabe se "alta confiança" realmente significa "mais correto". É pra isso que vai servir o Eval Harness mais pra frente — comparar, com dados reais, se esse número significa alguma coisa ou se é só decoração.
+
+## Descoberta de erro
+
+O processo automatizado de teste é bem melhor que os testes manuais pois um arquivo no qual eu não abro a um mês e pode dar erro por eu ter esquecido de testar de forma manual ou até mesmo um cliente pegar o erro mas se eu fizer os testes de forma automatizada eu já evito esse problema, assim que eu rodo um "pytest" ele já faz o teste do contrato compartilhado usando um agente falso de forma automática.  

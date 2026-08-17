@@ -23,6 +23,11 @@ todo agente segue: **perceive → plan → act**.
 - `act()` — o agente reporta a sugestão, **sempre em modo aprovação humana** — nenhum agente
   executa ação nenhuma sozinho neste projeto.
 
+  O acesso a dado é feito através de **Tools** (`kernel/tools.py`) — componentes read-only
+reutilizáveis entre agentes (ex.: `PostgresQueryTool`), em vez de cada agente reimplementar
+sua própria conexão. O resultado da análise de cada agente é um **Finding** estruturado
+(`kernel/schemas.py`: causa provável, nível de confiança, próxima ação), não mais texto livre.
+
 Qualquer agente novo herda dessa base e só precisa implementar esses três métodos com sua
 lógica específica — o ciclo de execução (`run()`) e o registro de sugestões
 (`registrar_sugestao()`) já vêm prontos, compartilhados por todos.
@@ -43,8 +48,9 @@ revisadas com `painel.py`, e aprovadas ou rejeitadas diretamente por ali..
 
 - Python 3.12
 - Docker + Docker Compose (Postgres, Prometheus, Grafana)
-- Groq API (Llama 3.3 70B) para as chamadas de IA
+- Groq API (openai/gpt-oss-120b) para as chamadas de IA
 - Postgres como fonte de dados do ambiente-demo
+- pytest para testes automatizados do kernel
 
 ## Como rodar
 
@@ -77,6 +83,11 @@ python agente_backup.py
 python painel.py
 ```
 
+Roda os testes automatizados do kernel:
+```bash
+pytest
+```
+
 O `kernel` também pode ser instalado como pacote (modo editável), pra ser reaproveitado em
 outros projetos:
 ```bash
@@ -85,17 +96,22 @@ pip install -e .
 
 ## Status e próximos passos
 
-- [x] Ambiente-demo (Postgres, Prometheus, Grafana) via Docker
-- [x] Kernel com contrato perceive/plan/act
-- [x] Agente de Triagem de Incidentes
-- [x] Agente de Backup & DR Verification
-- [x] Agente de Infraestrutura (via Prometheus)
-- [x] Registro compartilhado de sugestões + painel de revisão
-- [x] Fluxo de aprovação/rejeição das sugestões
-- [ ] Outros agentes candidatos documentados: Cost/FinOps, Security & Patch Compliance,
-      Deployment Health, Infra-as-Code Review, Documentation/Runbook
-- [ ] Empacotar como pacote pip instalável
-    Especificação detalhada dos próximos agentes em [`AGENTES_ROADMAP.md`](AGENTES_ROADMAP.md).
+O projeto segue o Product Blueprint V2 como documento canônico, evoluindo de kernel
+experimental para produto de Operational Intelligence. Construção em 8 estágios:
+
+- [x] **Stage 1 — Kernel Trust Foundation**: sem credenciais hardcoded, Tool Registry,
+      outputs estruturados (Finding), testes automatizados básicos do kernel
+- [ ] Stage 2 — Investigation Engine
+- [ ] Stage 3 — Eval Harness
+- [ ] Stage 4 — Risk + Approval + Audit
+- [ ] Stage 5 — Action + Verification
+- [ ] Stage 6 — Memory
+- [ ] Stage 7 — Product Layer
+- [ ] Stage 8 — Commercial Agent Packs
+
+Decisões e justificativas de cada etapa em [`DECISION_LOG.md`](DECISION_LOG.md).
+Agentes verticais candidatos (fora de escopo até o Stage 8) documentados em
+[`AGENTES_ROADMAP.md`](AGENTES_ROADMAP.md).
 
     ## Segurança / Configuração
 
