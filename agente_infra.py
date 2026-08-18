@@ -1,27 +1,17 @@
 import json
-import requests
 from groq import Groq
 from kernel.config import settings
 from kernel.schemas import Finding
 from kernel.agent import Agent
+from tool_prometheus_query import PrometheusUpTool
 
 
 class AgenteInfra(Agent):
     def perceive(self) -> dict:
-        resposta = requests.get(
-            "http://localhost:9090/api/v1/query",
-            params={"query": "up"},
-        )
-        dados = resposta.json()
-
-        alvos = []
-        for item in dados["data"]["result"]:
-            alvos.append({
-                "job": item["metric"]["job"],
-                "instance": item["metric"]["instance"],
-                "status": "ativo" if item["value"][1] == "1" else "caido",
-            })
-        return {"alvos": alvos}
+        tool = PrometheusUpTool()
+        dados = tool.run()
+        return {"alvos": dados["alvos"]}
+        
 
     def plan(self, contexto: dict) -> dict:
         alvos = contexto["alvos"]
