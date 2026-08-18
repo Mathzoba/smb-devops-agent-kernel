@@ -49,3 +49,24 @@
 **Evidência/justificativa:** critério de aceite explícito do Stage 1; dois bugs reais nesta sessão (indentação quebrando métodos abstratos) só foram pegos rodando manualmente — um teste automatizado pegaria isso sem depender de lembrar de rodar.
 
 **Efeito:** Stage 1 (Kernel Trust Foundation) do blueprint está completo.
+
+## 2026-08-18 — Primeira fatia do Investigation Engine (cruzamento de evidência)
+
+**Contexto:** agentes decidiam com base numa fonte só de dado (ex.: só alertas), sem checagem
+cruzada. Isso deixava o campo `confianca` sem lastro real (limitação já registrada no marco
+de outputs estruturados).
+
+**Decisão:** criar `tool_prometheus_query.py` (`PrometheusUpTool`), reaproveitada tanto pelo
+`agente_infra.py` (substituindo a chamada direta a `requests`) quanto pelo
+`agente_triagem_incidentes.py`, que agora consulta essa segunda fonte antes de concluir. O
+cruzamento em si (bater o serviço do alerta com os alvos monitorados) é feito pelo modelo via
+instrução no prompt, não por lógica Python — escolha deliberada de simplicidade em troca de
+previsibilidade.
+
+**Evidência/justificativa:** validado ao vivo — o mesmo alerta que antes gerava confiança
+"alta" (sugestão #1) passou a gerar confiança "baixa" (sugestão #5) depois de cruzar com o
+Prometheus, onde `api-pagamentos` não está monitorado.
+
+**Limitação observada:** o modelo ajustou a confiança corretamente, mas nem sempre cita
+explicitamente a falta de monitoramento na causa provável, mesmo instruído a fazer isso. Fica
+registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a corrigir agora.

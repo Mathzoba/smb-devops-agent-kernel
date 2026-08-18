@@ -67,3 +67,10 @@ Um ponto importante que discutimos: o campo `confianca` não é uma métrica cal
 ## Descoberta de erro
 
 O processo automatizado de teste é bem melhor que os testes manuais pois um arquivo no qual eu não abro a um mês e pode dar erro por eu ter esquecido de testar de forma manual ou até mesmo um cliente pegar o erro mas se eu fizer os testes de forma automatizada eu já evito esse problema, assim que eu rodo um "pytest" ele já faz o teste do contrato compartilhado usando um agente falso de forma automática.  
+
+## Cruzamento  de modelo
+
+Olhar somente para os alertas deixava fragil, mas com duas fontes reais permite com que o agente investigue de verdade.
+delegar o raciocínio de cruzamento da  i.a  em vez de fixar uma regra em python é um perde e ganha delegando ganha flexibilidade mas perde a previsibilidade.
+
+O problema real é que a confiança caiu então essa parte funcionou, mas a causa provável não seguiu as instruções de informar que era falta de munitoramento. 
