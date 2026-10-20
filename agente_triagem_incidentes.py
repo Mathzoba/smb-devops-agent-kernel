@@ -2,13 +2,29 @@ from tool_postgres_query import PostgresQueryTool
 from dotenv import load_dotenv
 from groq import Groq
 from kernel.config import settings
-from kernel.schemas import Finding
+from kernel.schemas import Finding, Evidence
 from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
 
+def alertas_para_evidencias(linhas: list[dict]) -> list[Evidence]:
+    ...
+
 load_dotenv()
 
+def alertas_para_evidencias(linhas: list[dict]) -> list[Evidence]:
+    """Transforma linhas da tabela 'alertas' em evidencias. Funcao pura: nao acessa banco."""
+    evidencias = []                      # lista vazia que vamos encher
+    for alerta in linhas:                # 'alerta' é um dicionario por vez
+        evidencia = Evidence(
+            tipo="alerta",               # todo item desta funcao é um alerta
+            fonte="postgres",            # todos vieram do banco
+            timestamp=str(alerta["criado_em"]),   # datetime -> texto
+            assunto=alerta["servico"],
+            observacao=f"[{alerta['severidade']}] {alerta['mensagem']}",
+        )
+        evidencias.append(evidencia)     # adiciona na lista
+    return evidencias
 
 class AgenteTriagemIncidentes(Agent):
     def perceive(self) -> dict:

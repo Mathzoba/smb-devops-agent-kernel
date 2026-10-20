@@ -20,3 +20,4 @@ packages = ["kernel"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
