@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: demo123
       POSTGRES_DB: smb_demo
     ports:
-      - "5432:5432"
+      - "${PG_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
