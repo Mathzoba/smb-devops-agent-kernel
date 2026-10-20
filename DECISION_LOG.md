@@ -70,3 +70,55 @@ Prometheus, onde `api-pagamentos` não está monitorado.
 **Limitação observada:** o modelo ajustou a confiança corretamente, mas nem sempre cita
 explicitamente a falta de monitoramento na causa provável, mesmo instruído a fazer isso. Fica
 registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a corrigir agora.
+
+## 2026-10-15 — Stage 1 reaberto: estava parcial, não completo
+
+**Contexto:** a entrada de 17/08 declarou o Stage 1 completo. Uma auditoria em 15/10 comparou o código com os acceptance criteria do Blueprint v2.0 (seção 30) e encontrou lacunas.
+
+**Decisão:** reabrir o Stage 1 e só fechá-lo quando os 4 critérios do Blueprint forem atendidos.
+
+**Evidência:**
+- *Credenciais:* atendido no código, mas `docker-compose.yml` ainda tem `POSTGRES_PASSWORD: demo123`.
+- *Finding/Hypothesis/Recommendation persistidos:* não atendido. O `Finding` atual é a conclusão do LLM, não evidência; Hypothesis, Recommendation e Evidence Store não existem.
+- *Tools read-only padronizados:* parcial. `PostgresQueryTool` executa qualquer SQL (nada impede DELETE/DROP), sem timeout; URL do Prometheus fixa no código.
+- *Testes básicos:* atendido (1 teste do contrato `run()`).
+
+**Alternativas consideradas:** seguir para o Stage 2 com a fundação incompleta (rejeitado: o Investigation Engine precisa registrar evidência a favor/contra hipóteses, e não existe tipo de evidência).
+
+**Reversão:** o Stage 1 fecha quando os 4 critérios estiverem atendidos e validados por teste.
+
+## 2026-10-20 — Correção do requirements.txt
+
+**Contexto:** ao clonar o repo numa máquina nova (15/10), `pip install -r requirements.txt` falhou.
+
+**Decisão:** remover a linha que instalava o próprio projeto, adicionar `pytest` com versão fixa e regravar o arquivo em UTF-8. O kernel passa a ser instalado em modo editável por comando separado (`pip install -e .`).
+
+**Evidência:** o arquivo foi gerado com `pip freeze` enquanto o kernel estava instalado em modo editável; o freeze registrou `-e git+...@7c69521`, commit anterior ao `pyproject.toml`, e o pip não encontrava um projeto Python ali. O `pytest` não constava na lista. O arquivo estava em UTF-16 (padrão do `>` no PowerShell). Na máquina antiga o erro nunca apareceu porque o ambiente nunca tinha sido montado do zero a partir do arquivo.
+
+**Alternativas consideradas:** manter o arquivo e instalar manualmente (rejeitado: o projeto deixa de ser reproduzível em outra máquina).
+
+**Reversão:** se o `requirements.txt` for regenerado, usar `pip freeze --exclude-editable`.
+
+## 2026-10-20 — Porta do Postgres configurável via .env
+
+**Contexto:** na máquina nova, o Python conectava num PostgreSQL 18 instalado no Windows (serviço `postgresql-x64-18`), também escutando na porta 5432, em vez do container. A recusa veio em português e o psycopg2 a exibiu como `UnicodeDecodeError`, mascarando o erro real (autenticação recusada).
+
+**Decisão:** mudar o mapeamento para `"${PG_PORT:-5432}:5432"`. A porta do lado do host vem de `PG_PORT` no `.env` (o mesmo valor que o `kernel/config.py` já lia); a porta interna do container continua 5432.
+
+**Evidência:** `netstat -ano | findstr :5432` mostrou dois processos escutando (o Postgres do Windows e o Docker). Com `PG_PORT=5433`, conexão e agentes funcionaram.
+
+**Alternativas consideradas:** parar o serviço do Postgres local (rejeitado: exige admin na máquina corporativa e volta a subir no reboot).
+
+**Reversão:** sem conflito na máquina, basta não definir `PG_PORT`; o padrão continua 5432.
+
+## 2026-10-20 — Remoção do Grafana do ambiente-demo
+
+**Contexto:** o Grafana foi adicionado na fase de aprendizado, por sugestão numa conversa que não foi registrada. Na máquina nova, a porta 3000 já estava ocupada e o serviço não subiu.
+
+**Decisão:** remover o serviço `grafana` e o volume `grafana_data` do `docker-compose.yml`.
+
+**Evidência:** busca por "grafana" e "3000" em todos os `.py` não encontrou uso; após a remoção, o agente de triagem rodou de ponta a ponta normalmente.
+
+**Alternativas consideradas:** mudar a porta do Grafana (rejeitado: mantém uma peça sem função, que adiciona atrito a quem clona o projeto).
+
+**Reversão:** reintroduzir se o Executive View (Blueprint, seção 25) precisar de dashboard, com justificativa registrada aqui.
