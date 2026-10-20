@@ -74,3 +74,13 @@ Olhar somente para os alertas deixava fragil, mas com duas fontes reais permite 
 delegar o raciocínio de cruzamento da  i.a  em vez de fixar uma regra em python é um perde e ganha delegando ganha flexibilidade mas perde a previsibilidade.
 
 O problema real é que a confiança caiu então essa parte funcionou, mas a causa provável não seguiu as instruções de informar que era falta de munitoramento. 
+
+## Ambiente do zero numa máquina nova (15-20/10/2026)
+
+**Clone limpo:** o requirements.txt quebrado nunca deu erro na minha máquina antiga porque lá eu já tinha tudo instalado. O arquivo nunca tinha sido usado de verdade pra montar o ambiente do zero. Numa máquina nova, o pip foi seguir a lista e quebrou. Arquivo de configuração que nunca foi testado do zero não está validado.
+
+**Erro escondido:** o Python dava UnicodeDecodeError, mas o problema real era outro: tinha um PostgreSQL 18 instalado no Windows usando a mesma porta 5432 do container. O Python conectava no Postgres errado, ele recusava o login em português, e o psycopg2 travava ao ler o "ç". Descobri com `Get-Service *postgres*` e `netstat -ano | findstr :5432`. O primeiro erro que aparece nem sempre é o erro real.
+
+**Portas no Docker:** no `"5433:5432"`, o lado esquerdo é a porta no Windows (tipo o número externo de uma empresa, não pode repetir) e o lado direito é a porta dentro do container (tipo o ramal, cada container tem o seu e pode repetir). Só troquei o lado esquerdo, porque o conflito era só no Windows.
+
+**Conversa não é documentação:** o Grafana estava no projeto mas ninguém sabia pra quê, porque a decisão de colocar ele ficou numa conversa que eu perdi. Ele não tinha função e ainda causou conflito de porta. A partir de agora, toda decisão que eu tomar numa conversa vira uma entrada no DECISION_LOG antes de virar código.

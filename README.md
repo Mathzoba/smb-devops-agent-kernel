@@ -47,7 +47,7 @@ revisadas com `painel.py`, e aprovadas ou rejeitadas diretamente por ali..
 ## Stack
 
 - Python 3.12
-- Docker + Docker Compose (Postgres, Prometheus, Grafana)
+- Docker + Docker Compose (Postgres, Prometheus)
 - Groq API (openai/gpt-oss-120b) para as chamadas de IA
 - Postgres como fonte de dados do ambiente-demo
 - pytest para testes automatizados do kernel
@@ -99,8 +99,7 @@ pip install -e .
 O projeto segue o Product Blueprint V2 como documento canônico, evoluindo de kernel
 experimental para produto de Operational Intelligence. Construção em 8 estágios:
 
-- [x] **Stage 1 — Kernel Trust Foundation**: sem credenciais hardcoded, Tool Registry,
-      outputs estruturados (Finding), testes automatizados básicos do kernel
+- [ ] **Stage 1 — Kernel Trust Foundation** (reaberto em 15/10 — ver DECISION_LOG)
 - [ ] Stage 2 — Investigation Engine
 - [ ] Stage 3 — Eval Harness
 - [ ] Stage 4 — Risk + Approval + Audit
@@ -123,3 +122,31 @@ Este foi meu primeiro projeto de IA aplicada, construído do zero — incluindo 
 Git e os fundamentos de agentes de LLM. Decisões e processo de aprendizado documentados em
 `LEARNING_LOG.md`.
 
+## Como rodar
+
+Requer Python 3.12 (`py install 3.12` no Windows, se não tiver) e Docker Desktop.
+
+```bash
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pip install -e .
+```
+
+Copie `.env.example` para `.env` e preencha `GROQ_API_KEY` e `PG_PASSWORD`
+(use `demo123`, a mesma senha do `docker-compose.yml`).
+
+Se já existir um PostgreSQL instalado na máquina usando a porta 5432, defina outra porta
+no `.env` (ex.: `PG_PORT=5433`). O Docker e o código leem esse mesmo valor.
+
+Sobe a infraestrutura (Postgres e Prometheus):
+```bash
+docker compose up -d
+```
+
+Cria as tabelas e dados de exemplo (rodar uma vez só; rodar de novo duplica os dados):
+```bash
+python test_db.py
+python test_backups.py
+python criar_tabela_sugestoes.py
+```
