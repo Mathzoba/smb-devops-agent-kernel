@@ -6,6 +6,7 @@ from kernel.schemas import Finding, Evidence
 from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
+from datetime import datetime
 
 load_dotenv()
 
@@ -60,27 +61,31 @@ def alvos_para_evidencias(
 
 class AgenteTriagemIncidentes(Agent):
     def perceive(self) -> dict:
-        tool = PostgresQueryTool()
-        dados = tool.run(
+        # 1. Coleta (Tools, precisam de banco/rede)
+        dados_alertas = PostgresQueryTool().run(
             query=(
                 "SELECT id, criado_em, servico, severidade, mensagem "
                 "FROM alertas ORDER BY criado_em DESC LIMIT 10;"
             )
         )
-        return {"alertas": dados["linhas"]}
+        dados_prometheus = PrometheusUpTool().run()
 
-    def plan(self, contexto: dict) -> dict:
-        alertas = contexto["alertas"]
-        texto_alertas = "\n".join(
-            f"- [{alerta['severidade']}] {alerta['servico']}: {alerta['mensagem']} (em {alerta['criado_em']})"
-            for alerta in alertas
+        # 2. Transformacao em evidencia (funcoes puras, testadas)
+        linhas = dados_alertas["linhas"]
+        servicos_alertados = [alerta["servico"] for alerta in linhas]
+        coletado_em = str(datetime.now())
+
+        evidencias = alertas_para_evidencias(linhas)
+        evidencias += alvos_para_evidencias(
+            dados_prometheus["alvos"], servicos_alertados, coletado_em
         )
-
-        prometheus_tool = PrometheusUpTool()
-        dados_prometheus = prometheus_tool.run()
-        texto_prometheus = "\n".join(
-            f"- {alvo['job']} ({alvo['instance']}): {alvo['status']}"
-            for alvo in dados_prometheus["alvos"]
+        return {"evidencias": evidencias}
+    
+    def plan(self, contexto: dict) -> dict:
+        evidencias = contexto["evidencias"]
+        texto_evidencias = "\n".join(
+            f"- [{e.fonte}/{e.tipo}] {e.assunto}: {e.observacao} (em {e.timestamp})"
+            for e in evidencias
         )
 
         client = Groq(api_key=settings.GROQ_API_KEY)
@@ -92,21 +97,18 @@ class AgenteTriagemIncidentes(Agent):
                     "role": "system",
                     "content": (
                         "Você é um assistente de triagem de incidentes de TI. "
-                        "Analise os alertas abaixo. Você também recebe a lista de alvos "
-                        "monitorados pelo Prometheus e seus status, como evidência adicional. "
-                        "Se o serviço do alerta NÃO aparecer nessa lista, isso significa que não "
-                        "há monitoramento confirmando ou contradizendo o alerta — diga isso "
-                        "explicitamente na causa provável, e reduza a confiança de acordo. "
+                        "Você recebe uma lista de evidências coletadas por ferramentas. "
+                        "Baseie sua análise SOMENTE nessas evidências; não invente fatos. "
+                        "Se uma evidência indicar que um serviço não é monitorado, cite isso "
+                        "na causa provável. Falta de monitoramento é falta de evidência, "
+                        "não é a causa do problema: nesse caso use confiança baixa. "
                         "Responda SOMENTE em JSON, exatamente neste formato: "
                         '{"causa_provavel": "...", "confianca": "baixa|media|alta", "proxima_acao": "..."}'
                     ),
                 },
                 {
                     "role": "user",
-                    "content": (
-                        f"Alertas:\n{texto_alertas}\n\n"
-                        f"Status no Prometheus:\n{texto_prometheus}"
-                    ),
+                    "content": f"Evidências:\n{texto_evidencias}",
                 },
             ],
         )
