@@ -7,24 +7,56 @@ from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
 
-def alertas_para_evidencias(linhas: list[dict]) -> list[Evidence]:
-    ...
-
 load_dotenv()
+
+
+# ---------- Funcoes puras: transformam dado em Evidence, sem banco/rede ----------
 
 def alertas_para_evidencias(linhas: list[dict]) -> list[Evidence]:
     """Transforma linhas da tabela 'alertas' em evidencias. Funcao pura: nao acessa banco."""
-    evidencias = []                      # lista vazia que vamos encher
-    for alerta in linhas:                # 'alerta' é um dicionario por vez
+    evidencias = []
+    for alerta in linhas:
         evidencia = Evidence(
-            tipo="alerta",               # todo item desta funcao é um alerta
-            fonte="postgres",            # todos vieram do banco
-            timestamp=str(alerta["criado_em"]),   # datetime -> texto
+            tipo="alerta",
+            fonte="postgres",
+            timestamp=str(alerta["criado_em"]),
             assunto=alerta["servico"],
             observacao=f"[{alerta['severidade']}] {alerta['mensagem']}",
         )
-        evidencias.append(evidencia)     # adiciona na lista
+        evidencias.append(evidencia)
     return evidencias
+
+
+def alvos_para_evidencias(
+    alvos: list[dict], servicos_alertados: list[str], coletado_em: str
+) -> list[Evidence]:
+    """Transforma alvos do Prometheus em evidencias e marca servicos alertados sem monitoramento."""
+    evidencias = []
+
+    for alvo in alvos:
+        evidencias.append(Evidence(
+            tipo="monitoramento",
+            fonte="prometheus",
+            timestamp=coletado_em,
+            assunto=alvo["job"],
+            observacao=f"alvo {alvo['instance']} esta {alvo['status']}",
+        ))
+
+    monitorados = {alvo["job"] for alvo in alvos}
+    for servico in set(servicos_alertados):
+        if servico not in monitorados:
+            evidencias.append(Evidence(
+                tipo="monitoramento",
+                fonte="prometheus",
+                timestamp=coletado_em,
+                assunto=servico,
+                observacao="servico nao aparece entre os alvos monitorados pelo Prometheus",
+            ))
+
+    return evidencias
+
+
+# ---------- Agente ----------
 
 class AgenteTriagemIncidentes(Agent):
     def perceive(self) -> dict:
@@ -85,7 +117,7 @@ class AgenteTriagemIncidentes(Agent):
             proxima_acao=dados["proxima_acao"],
         )
         return {"finding": finding}
-    
+
     def act(self, plano: dict) -> None:
         finding = plano["finding"]
         print("=" * 50)
