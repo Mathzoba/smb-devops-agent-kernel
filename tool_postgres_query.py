@@ -21,12 +21,13 @@ class PostgresQueryTool(Tool):
             dbname=settings.PG_DATABASE,
             options="-c statement_timeout=5000",
         )
-        conn.set_session(readonly=True)
-        cur = conn.cursor()
-        cur.execute(query)
-        colunas = [desc[0] for desc in cur.description]
-        linhas = cur.fetchall()
-        cur.close()
-        conn.close()
-        resultado = [dict(zip(colunas, linha)) for linha in linhas]
-        return {"linhas": resultado}
+        try:
+            conn.set_session(readonly=True)
+            cur = conn.cursor()
+            cur.execute(query)
+            colunas = [desc[0] for desc in cur.description]
+            linhas = cur.fetchall()
+            resultado = [dict(zip(colunas, linha)) for linha in linhas]
+            return {"linhas": resultado}
+        finally:
+            conn.close()
