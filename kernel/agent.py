@@ -1,7 +1,20 @@
-from kernel.schemas import Finding
+from kernel.schemas import Finding, Evidence, Hypothesis, Recommendation
 from kernel.config import settings
 from abc import ABC, abstractmethod
+from dataclasses import asdict
+import json
 import psycopg2
+
+
+def _conectar():
+    """Abre conexao com escrita. Usada so pelo kernel para registrar resultados."""
+    return psycopg2.connect(
+        host=settings.PG_HOST,
+        port=settings.PG_PORT,
+        user=settings.PG_USER,
+        password=settings.PG_PASSWORD,
+        dbname=settings.PG_DATABASE,
+    )
 
 
 class Agent(ABC):
@@ -35,23 +48,47 @@ class Agent(ABC):
         plano = self.plan(contexto)
         self.act(plano)
 
-    from kernel.schemas import Finding
-# ... resto dos imports que já existem
-
     def registrar_sugestao(self, finding: Finding) -> None:
-        conn = psycopg2.connect(
-            host=settings.PG_HOST,
-            port=settings.PG_PORT,
-            user=settings.PG_USER,
-            password=settings.PG_PASSWORD,
-            dbname=settings.PG_DATABASE,
-        )
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO sugestoes_pendentes (agente, causa_provavel, confianca, proxima_acao) "
-            "VALUES (%s, %s, %s, %s);",
-            (self.nome, finding.causa_provavel, finding.confianca, finding.proxima_acao),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
+        """Formato antigo (so 3 campos). Ainda usado pelos agentes de backup e infra."""
+        conn = _conectar()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO sugestoes_pendentes (agente, causa_provavel, confianca, proxima_acao) "
+                "VALUES (%s, %s, %s, %s);",
+                (self.nome, finding.causa_provavel, finding.confianca, finding.proxima_acao),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def registrar_investigacao(
+        self,
+        evidencias: list[Evidence],
+        hipotese: Hypothesis,
+        recomendacao: Recommendation,
+    ) -> None:
+        """Formato novo: salva evidencias, hipotese e recomendacao completas."""
+        evidencias_json = json.dumps([asdict(e) for e in evidencias], ensure_ascii=False)
+        conn = _conectar()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO sugestoes_pendentes "
+                "(agente, causa_provavel, confianca, proxima_acao, "
+                "evidencias, evidencias_citadas, motivo, risco) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s);",
+                (
+                    self.nome,
+                    hipotese.afirmacao,
+                    hipotese.confianca,
+                    recomendacao.acao,
+                    evidencias_json,
+                    ", ".join(hipotese.evidencias),
+                    recomendacao.motivo,
+                    recomendacao.risco,
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
