@@ -98,7 +98,7 @@ pytest
 O projeto segue o Product Blueprint V2 como documento canônico, evoluindo de kernel
 experimental para produto de Operational Intelligence. Construção em 8 estágios:
 
-- [ ] **Stage 1 — Kernel Trust Foundation** (reaberto em 15/10 — ver DECISION_LOG)
+- [x] **Stage 1 — Kernel Trust Foundation** (fechado em 21/10 no agente de triagem; backup e infra seguem como legado)
 - [ ] Stage 2 — Investigation Engine
 - [ ] Stage 3 — Eval Harness
 - [ ] Stage 4 — Risk + Approval + Audit

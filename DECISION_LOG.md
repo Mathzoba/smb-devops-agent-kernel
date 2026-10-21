@@ -207,3 +207,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Alternativas consideradas:** 3 tabelas novas (investigações, evidências, hipóteses). Rejeitado agora: exigiria reescrever o painel inteiro sem ganho imediato. Reavaliar no Stage 7 (multi-tenant).
 
 **Aprendizado registrado:** migração adiciona; o script antigo `criar_tabela_sugestoes.py` usa DROP TABLE e só serve para ambiente novo.
+
+## 2026-10-21 — Stage 1 fechado no agente de triagem; backup e infra como legado
+
+**Contexto:** os 4 critérios do Stage 1 (sem credenciais no código; evidência, hipótese e recomendação persistidas; tools read-only; testes) estão atendidos no agente de triagem. Backup e infra ainda usam `Finding` e `registrar_sugestao()`.
+
+**Decisão:** fechar o Stage 1 agora. Backup e infra ficam congelados como legado. O Stage 2 (Investigation Engine) será construído só no agente de triagem, que serve de laboratório.
+
+**Evidência:** 8 testes passando; sugestão #21 gravada com evidências, hipótese e recomendação completas; painel exibe as provas.
+
+**Alternativas consideradas:** migrar backup e infra antes de fechar (rejeitado: cerca de 2 sessões de trabalho que mudariam de novo no Stage 2; o Blueprint pede construir a fundação em um caso antes de multiplicar).
+
+**Reversão:** migrar backup e infra quando o formato do Stage 2 estabilizar, ou se um deles virar prioridade de cliente.
