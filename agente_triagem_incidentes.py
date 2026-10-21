@@ -56,6 +56,11 @@ def alvos_para_evidencias(
 
     return evidencias
 
+def evidencias_inexistentes(citadas: list[str], total: int) -> list[str]:
+    """Devolve os ids citados que nao existem. Ex.: total=3 -> so E1, E2 e E3 sao validos."""
+    validas = {f"E{numero}" for numero in range(1, total + 1)}
+    return [citada for citada in citadas if citada not in validas]
+
 
 # ---------- Agente ----------
 
@@ -121,7 +126,11 @@ class AgenteTriagemIncidentes(Agent):
 
         hipotese = Hypothesis(**dados["hipotese"])
         recomendacao = Recommendation(**dados["recomendacao"])
-        return {"hipotese": hipotese, "recomendacao": recomendacao}
+        return {
+            "hipotese": hipotese,
+            "recomendacao": recomendacao,
+            "total_evidencias": len(evidencias),
+        }
 
     def act(self, plano: dict) -> None:
         hipotese = plano["hipotese"]
@@ -131,6 +140,9 @@ class AgenteTriagemIncidentes(Agent):
         print(f"[{self.nome}] SUGESTÃO PENDENTE DE APROVAÇÃO HUMANA:")
         print(f"Hipótese: {hipotese.afirmacao}")
         print(f"Baseada em: {', '.join(hipotese.evidencias)}")
+        inventadas = evidencias_inexistentes(hipotese.evidencias, plano["total_evidencias"])
+        if inventadas:
+            print(f"⚠️ ATENÇÃO: o agente citou evidências que não existem: {', '.join(inventadas)}")
         print(f"Confiança: {hipotese.confianca}")
         print(f"Ação recomendada: {recomendacao.acao}")
         print(f"Motivo: {recomendacao.motivo}")

@@ -1,5 +1,9 @@
 from datetime import datetime
-from agente_triagem_incidentes import alertas_para_evidencias, alvos_para_evidencias
+from agente_triagem_incidentes import (
+    alertas_para_evidencias,
+    alvos_para_evidencias,
+    evidencias_inexistentes,
+)
 
 
 def test_alertas_viram_evidencias():
@@ -45,3 +49,10 @@ def test_servico_monitorado_nao_gera_alerta_de_monitoramento():
     evidencias = alvos_para_evidencias(alvos, ["api-pagamentos"], "2026-10-20 14:00:00")
 
     assert len(evidencias) == 1
+
+def test_detecta_evidencia_inventada():
+    assert evidencias_inexistentes(["E1", "E9"], total=3) == ["E9"]
+
+
+def test_todas_evidencias_validas():
+    assert evidencias_inexistentes(["E1", "E3"], total=3) == []
