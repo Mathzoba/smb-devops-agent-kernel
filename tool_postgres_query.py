@@ -19,6 +19,7 @@ class PostgresQueryTool(Tool):
             user=settings.PG_USER,
             password=settings.PG_PASSWORD,
             dbname=settings.PG_DATABASE,
+            options="-c statement_timeout=5000",
         )
         conn.set_session(readonly=True)
         cur = conn.cursor()
