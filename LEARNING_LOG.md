@@ -92,3 +92,9 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Banco recusa, não o Python:** o banco recusando escrita é mais seguro do que bloquear a palavra DELETE no código, porque dá pra escrever a palavra de outro jeito e burlar. O banco sabe o que cada comando faz de verdade.
 
 **finally:** tudo que está no finally roda sempre, com erro ou sem. Por isso a conexão com o banco fecha sempre e não fica acumulando conexão aberta.
+
+## Hipótese e recomendação citando evidências (21/10/2026)
+
+**Citar as evidências:** quando o agente cita E1, E2, E4, o técnico vê os dados reais que aconteceram e confere só esses. O ganho maior é conseguir ver quando o agente erra: numa execução ele disse que a E4 ("não é monitorado") provava que o serviço caiu. Olhando a E4 dá pra ver na hora que uma coisa não prova a outra. Sem a citação, esse erro ia passar escondido.
+
+**Alarme falso:** testar que a função devolve `[]` é tão importante quanto testar que ela pega o E9. Se o aviso aparecesse sem motivo, o técnico ia aprender a ignorar, e no dia que fosse verdade ninguém ia prestar atenção. É o menino que gritava lobo.

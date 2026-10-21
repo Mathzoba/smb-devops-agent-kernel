@@ -183,3 +183,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Evidência:** `git grep demo123` não encontra mais a senha em código nem no compose. Agente e 6 testes funcionando.
 
 **Atenção:** o Postgres só lê a senha na criação do volume. Trocar `PG_PASSWORD` depois exige alterar a senha dentro do banco ou recriar o volume.
+
+## 2026-10-21 — Hypothesis e Recommendation citando evidências
+
+**Contexto:** o agente devolvia causa, confiança e ação em frases soltas, sem dizer em quais fatos se baseava. O técnico precisava confiar no LLM ou refazer a investigação.
+
+**Decisão:** dataclasses `Hypothesis` (afirmacao, evidencias, confianca) e `Recommendation` (acao, motivo, risco). As evidências são numeradas (E1, E2...) no prompt e a hipótese precisa citar os números. A função pura `evidencias_inexistentes()` avisa quando o LLM cita uma evidência que não existe. Só o agente de triagem migrou; backup e infra seguem com `Finding`. O `act()` converte para `Finding` na hora de salvar (ponte temporária até a persistência).
+
+**Evidência:** 8 testes passando. 3 execuções: citou E1, E2 e E4 em todas; nunca citou E3 (alvo prometheus ativo, irrelevante para o caso). Na execução 2 usou E4 ("não monitorado") como prova de que o serviço caiu — erro de raciocínio que agora fica visível ao técnico.
+
+**Campos do Blueprint deixados de fora:** rollback, impacto esperado e próximas checagens. Só fazem sentido quando houver execução de ações (Stage 5) ou investigação iterativa (Stage 2).
+
+**Limitações conhecidas:** confiança saiu "alta" em 2/3 sem monitoramento confirmando; risco "medio" em 3/3, inclusive para "reiniciar". Os dois continuam decididos pelo LLM. Confiança → regra no Stage 2; risco → Risk Engine no Stage 4.
