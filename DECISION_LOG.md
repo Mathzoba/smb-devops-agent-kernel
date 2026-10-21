@@ -195,3 +195,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Campos do Blueprint deixados de fora:** rollback, impacto esperado e próximas checagens. Só fazem sentido quando houver execução de ações (Stage 5) ou investigação iterativa (Stage 2).
 
 **Limitações conhecidas:** confiança saiu "alta" em 2/3 sem monitoramento confirmando; risco "medio" em 3/3, inclusive para "reiniciar". Os dois continuam decididos pelo LLM. Confiança → regra no Stage 2; risco → Risk Engine no Stage 4.
+
+## 2026-10-21 — Persistência da investigação completa
+
+**Contexto:** o `act()` convertia hipótese e recomendação em `Finding` e descartava evidências, evidências citadas, motivo e risco. O técnico não conseguia conferir nada depois.
+
+**Decisão:** migração `migracao_001_sugestoes_v2.py` adiciona colunas à tabela existente (`evidencias` JSONB, `evidencias_citadas`, `motivo`, `risco`) com `ADD COLUMN IF NOT EXISTS`, sem apagar dados. O kernel ganhou `registrar_investigacao()`; o agente de triagem usa esse método e não usa mais `Finding`. O painel mostra motivo, risco e as evidências citadas por extenso. `registrar_sugestao()` continua existindo para backup e infra.
+
+**Evidência:** sugestão #21 gravada com as 4 evidências em JSON e citadas `E1, E2, E4`; painel exibe sugestões novas e antigas sem erro; 8 testes passando.
+
+**Alternativas consideradas:** 3 tabelas novas (investigações, evidências, hipóteses). Rejeitado agora: exigiria reescrever o painel inteiro sem ganho imediato. Reavaliar no Stage 7 (multi-tenant).
+
+**Aprendizado registrado:** migração adiciona; o script antigo `criar_tabela_sugestoes.py` usa DROP TABLE e só serve para ambiente novo.
