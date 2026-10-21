@@ -2,7 +2,7 @@ from tool_postgres_query import PostgresQueryTool
 from dotenv import load_dotenv
 from groq import Groq
 from kernel.config import settings
-from kernel.schemas import Finding, Evidence, Hypothesis, Recommendation
+from kernel.schemas import Evidence, Hypothesis, Recommendation
 from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
@@ -127,12 +127,13 @@ class AgenteTriagemIncidentes(Agent):
         hipotese = Hypothesis(**dados["hipotese"])
         recomendacao = Recommendation(**dados["recomendacao"])
         return {
+            "evidencias": evidencias,
             "hipotese": hipotese,
             "recomendacao": recomendacao,
-            "total_evidencias": len(evidencias),
         }
 
     def act(self, plano: dict) -> None:
+        evidencias = plano["evidencias"]
         hipotese = plano["hipotese"]
         recomendacao = plano["recomendacao"]
 
@@ -140,7 +141,7 @@ class AgenteTriagemIncidentes(Agent):
         print(f"[{self.nome}] SUGESTÃO PENDENTE DE APROVAÇÃO HUMANA:")
         print(f"Hipótese: {hipotese.afirmacao}")
         print(f"Baseada em: {', '.join(hipotese.evidencias)}")
-        inventadas = evidencias_inexistentes(hipotese.evidencias, plano["total_evidencias"])
+        inventadas = evidencias_inexistentes(hipotese.evidencias, len(evidencias))
         if inventadas:
             print(f"⚠️ ATENÇÃO: o agente citou evidências que não existem: {', '.join(inventadas)}")
         print(f"Confiança: {hipotese.confianca}")
@@ -149,12 +150,7 @@ class AgenteTriagemIncidentes(Agent):
         print(f"Risco: {recomendacao.risco}")
         print("=" * 50)
 
-        # Ponte temporaria: o banco ainda usa o formato antigo (Finding)
-        self.registrar_sugestao(Finding(
-            causa_provavel=hipotese.afirmacao,
-            confianca=hipotese.confianca,
-            proxima_acao=recomendacao.acao,
-        ))
+        self.registrar_investigacao(evidencias, hipotese, recomendacao)
 
 
 if __name__ == "__main__":
