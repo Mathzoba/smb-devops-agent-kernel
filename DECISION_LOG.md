@@ -142,3 +142,22 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 - O agente sugere "reiniciar" (ação mutante) mesmo com confiança não alta, em 4/6 execuções. Caso para o Eval Harness e o Risk Engine.
 
 **Reversão:** revisar o prompt quando o Eval Harness permitir comparar versões com amostra maior.
+
+## 2026-10-21 — PostgresQueryTool read-only de verdade
+
+**Contexto:** a classe `Tool` diz que tools são read-only, mas nada garantia isso. A `PostgresQueryTool` executava qualquer SQL, não tinha limite de tempo e deixava a conexão aberta quando dava erro.
+
+**Decisão:** três proteções na Tool:
+- `conn.set_session(readonly=True)`: o próprio Postgres recusa escrita;
+- `statement_timeout=5000`: consultas acima de 5 segundos são canceladas;
+- `try/finally`: a conexão fecha sempre, mesmo com erro.
+
+**Evidência:** teste `test_postgres_tool_recusa_escrita` falhou antes da correção (o banco aceitou um DELETE) e passou depois. Teste `test_postgres_tool_cancela_consulta_lenta` falhou antes (a consulta rodou os 10s inteiros) e passou depois. Agente de triagem continua funcionando.
+
+**Alternativas consideradas:** bloquear palavras como DELETE/DROP no texto da query (rejeitado: fácil de burlar; o banco sabe o que cada comando faz, o Python só vê texto).
+
+**Sem teste para o try/finally:** testar conexão vazando é complexo e a mudança é pequena e conhecida.
+
+**Observação:** antes da correção, escritas eram desfeitas por acidente, porque a Tool nunca fazia `commit()`. A proteção existia por acaso, não por projeto.
+
+**Reversão:** o timeout de 5s pode ser ajustado se consultas legítimas de investigação precisarem de mais tempo.

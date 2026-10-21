@@ -84,3 +84,11 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Portas no Docker:** no `"5433:5432"`, o lado esquerdo é a porta no Windows (tipo o número externo de uma empresa, não pode repetir) e o lado direito é a porta dentro do container (tipo o ramal, cada container tem o seu e pode repetir). Só troquei o lado esquerdo, porque o conflito era só no Windows.
 
 **Conversa não é documentação:** o Grafana estava no projeto mas ninguém sabia pra quê, porque a decisão de colocar ele ficou numa conversa que eu perdi. Ele não tinha função e ainda causou conflito de porta. A partir de agora, toda decisão que eu tomar numa conversa vira uma entrada no DECISION_LOG antes de virar código.
+
+## Tool read-only de verdade (21/10/2026)
+
+**Teste que falha primeiro (Red):** antes de corrigir, escrevi um teste que falhou. Isso prova que o problema existia de verdade (o banco aceitava um DELETE). Depois da correção ele passou, e isso prova que foi a minha mudança que resolveu. Teste que nunca falhou não prova nada, é como alarme de incêndio que nunca foi testado.
+
+**Banco recusa, não o Python:** o banco recusando escrita é mais seguro do que bloquear a palavra DELETE no código, porque dá pra escrever a palavra de outro jeito e burlar. O banco sabe o que cada comando faz de verdade.
+
+**finally:** tudo que está no finally roda sempre, com erro ou sem. Por isso a conexão com o banco fecha sempre e não fica acumulando conexão aberta.
