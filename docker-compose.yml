@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: demo
-      POSTGRES_PASSWORD: demo123
-      POSTGRES_DB: smb_demo
+      POSTGRES_USER: ${PG_USER:-demo}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?Defina PG_PASSWORD no .env}
+      POSTGRES_DB: ${PG_DATABASE:-smb_demo}
     ports:
       - "${PG_PORT:-5432}:5432"
     volumes:
