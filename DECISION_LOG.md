@@ -161,3 +161,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Observação:** antes da correção, escritas eram desfeitas por acidente, porque a Tool nunca fazia `commit()`. A proteção existia por acaso, não por projeto.
 
 **Reversão:** o timeout de 5s pode ser ajustado se consultas legítimas de investigação precisarem de mais tempo.
+
+## 2026-10-21 — PrometheusUpTool: URL configurável e timeout
+
+**Contexto:** o endereço `http://localhost:9090` estava fixo no código e a chamada não tinha limite de tempo.
+
+**Decisão:** `PROMETHEUS_URL` no `kernel/config.py` (padrão `http://localhost:9090`), exposto no `.env.example`. Chamada com `timeout=5` e `raise_for_status()`.
+
+**Evidência:** agente de triagem roda normalmente; 6 testes passando.
+
+**Sem teste novo:** simular um Prometheus travado exige um servidor falso; o custo não compensa para uma mudança pequena e conhecida. Volta a ser avaliado no Eval Harness.
+
+**Reversão:** aumentar o timeout se o Prometheus do cliente for lento.

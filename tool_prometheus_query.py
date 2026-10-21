@@ -18,6 +18,7 @@ class PrometheusUpTool(Tool):
             params={"query": "up"},
             timeout=5,
         )
+        resposta.raise_for_status()
         dados = resposta.json()
 
         alvos = []
