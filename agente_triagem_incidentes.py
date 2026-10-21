@@ -2,7 +2,7 @@ from tool_postgres_query import PostgresQueryTool
 from dotenv import load_dotenv
 from groq import Groq
 from kernel.config import settings
-from kernel.schemas import Finding, Evidence
+from kernel.schemas import Finding, Evidence, Hypothesis, Recommendation
 from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
@@ -83,9 +83,11 @@ class AgenteTriagemIncidentes(Agent):
     
     def plan(self, contexto: dict) -> dict:
         evidencias = contexto["evidencias"]
+
+        # Numera as evidencias: E1, E2, E3...
         texto_evidencias = "\n".join(
-            f"- [{e.fonte}/{e.tipo}] {e.assunto}: {e.observacao} (em {e.timestamp})"
-            for e in evidencias
+            f"E{numero}: [{e.fonte}/{e.tipo}] {e.assunto}: {e.observacao} (em {e.timestamp})"
+            for numero, e in enumerate(evidencias, start=1)
         )
 
         client = Groq(api_key=settings.GROQ_API_KEY)
@@ -97,13 +99,16 @@ class AgenteTriagemIncidentes(Agent):
                     "role": "system",
                     "content": (
                         "Você é um assistente de triagem de incidentes de TI. "
-                        "Você recebe uma lista de evidências coletadas por ferramentas. "
+                        "Você recebe evidências numeradas (E1, E2...) coletadas por ferramentas. "
                         "Baseie sua análise SOMENTE nessas evidências; não invente fatos. "
-                        "Se uma evidência indicar que um serviço não é monitorado, cite isso "
-                        "na causa provável. Falta de monitoramento é falta de evidência, "
-                        "não é a causa do problema: nesse caso use confiança baixa. "
+                        "Na hipótese, cite os números das evidências que a sustentam. "
+                        "Falta de monitoramento é falta de evidência, não é a causa do problema. "
+                        "Na recomendação, informe o risco de executar a ação. "
                         "Responda SOMENTE em JSON, exatamente neste formato: "
-                        '{"causa_provavel": "...", "confianca": "baixa|media|alta", "proxima_acao": "..."}'
+                        '{"hipotese": {"afirmacao": "...", "evidencias": ["E1"], '
+                        '"confianca": "baixa|media|alta"}, '
+                        '"recomendacao": {"acao": "...", "motivo": "...", '
+                        '"risco": "baixo|medio|alto"}}'
                     ),
                 },
                 {
@@ -113,22 +118,31 @@ class AgenteTriagemIncidentes(Agent):
             ],
         )
         dados = json.loads(resposta.choices[0].message.content)
-        finding = Finding(
-            causa_provavel=dados["causa_provavel"],
-            confianca=dados["confianca"],
-            proxima_acao=dados["proxima_acao"],
-        )
-        return {"finding": finding}
+
+        hipotese = Hypothesis(**dados["hipotese"])
+        recomendacao = Recommendation(**dados["recomendacao"])
+        return {"hipotese": hipotese, "recomendacao": recomendacao}
 
     def act(self, plano: dict) -> None:
-        finding = plano["finding"]
+        hipotese = plano["hipotese"]
+        recomendacao = plano["recomendacao"]
+
         print("=" * 50)
         print(f"[{self.nome}] SUGESTÃO PENDENTE DE APROVAÇÃO HUMANA:")
-        print(f"Causa provável: {finding.causa_provavel}")
-        print(f"Confiança: {finding.confianca}")
-        print(f"Próxima ação: {finding.proxima_acao}")
+        print(f"Hipótese: {hipotese.afirmacao}")
+        print(f"Baseada em: {', '.join(hipotese.evidencias)}")
+        print(f"Confiança: {hipotese.confianca}")
+        print(f"Ação recomendada: {recomendacao.acao}")
+        print(f"Motivo: {recomendacao.motivo}")
+        print(f"Risco: {recomendacao.risco}")
         print("=" * 50)
-        self.registrar_sugestao(finding)
+
+        # Ponte temporaria: o banco ainda usa o formato antigo (Finding)
+        self.registrar_sugestao(Finding(
+            causa_provavel=hipotese.afirmacao,
+            confianca=hipotese.confianca,
+            proxima_acao=recomendacao.acao,
+        ))
 
 
 if __name__ == "__main__":
