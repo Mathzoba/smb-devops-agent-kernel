@@ -22,3 +22,18 @@ class Evidence:
     timestamp: str   # quando o fato aconteceu ou foi coletado
     assunto: str     # servico a que o fato se refere, ex.: "api-pagamentos"
     observacao: str  # o fato em si, curto e sem opiniao
+
+@dataclass
+class Hypothesis:
+    """O que o agente acha que aconteceu, apontando as evidencias que sustentam."""
+    afirmacao: str            # ex.: "Falha de conexao com o banco"
+    evidencias: list[str]     # ids das evidencias citadas, ex.: ["E1", "E2"]
+    confianca: str            # "baixa", "media" ou "alta"
+
+
+@dataclass
+class Recommendation:
+    """O que fazer, por que, e qual o risco de fazer."""
+    acao: str                 # ex.: "Verificar logs do PostgreSQL"
+    motivo: str               # por que essa acao ajuda
+    risco: str                # "baixo", "medio" ou "alto"
