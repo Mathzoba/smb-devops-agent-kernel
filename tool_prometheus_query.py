@@ -1,5 +1,6 @@
 import requests
 from kernel.tools import Tool
+from kernel.config import settings
 
 
 class PrometheusUpTool(Tool):
@@ -13,8 +14,9 @@ class PrometheusUpTool(Tool):
 
     def run(self) -> dict:
         resposta = requests.get(
-            "http://localhost:9090/api/v1/query",
+            f"{settings.PROMETHEUS_URL}/api/v1/query",
             params={"query": "up"},
+            timeout=5,
         )
         dados = resposta.json()
 

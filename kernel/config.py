@@ -22,6 +22,6 @@ class Settings:
     PG_DATABASE = os.environ.get("PG_DATABASE", "smb_demo")
     PG_PASSWORD = _obrigatorio("PG_PASSWORD")
     GROQ_API_KEY = _obrigatorio("GROQ_API_KEY")
-
+    PROMETHEUS_URL = os.environ.get("PROMETHEUS_URL", "http://localhost:9090")
 
 settings = Settings()
