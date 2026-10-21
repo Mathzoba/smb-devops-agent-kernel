@@ -20,6 +20,7 @@ class PostgresQueryTool(Tool):
             password=settings.PG_PASSWORD,
             dbname=settings.PG_DATABASE,
         )
+        conn.set_session(readonly=True)
         cur = conn.cursor()
         cur.execute(query)
         colunas = [desc[0] for desc in cur.description]
