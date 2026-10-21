@@ -173,3 +173,13 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Sem teste novo:** simular um Prometheus travado exige um servidor falso; o custo não compensa para uma mudança pequena e conhecida. Volta a ser avaliado no Eval Harness.
 
 **Reversão:** aumentar o timeout se o Prometheus do cliente for lento.
+
+## 2026-10-21 — Credenciais do Postgres no compose vêm do .env
+
+**Contexto:** `docker-compose.yml` tinha `POSTGRES_PASSWORD: demo123`, visível no GitHub.
+
+**Decisão:** usuário, senha e banco do compose leem as mesmas variáveis do `kernel/config.py` (`PG_USER`, `PG_PASSWORD`, `PG_DATABASE`). A senha usa `:?`, sem valor padrão: se faltar, o Docker para com erro.
+
+**Evidência:** `git grep demo123` não encontra mais a senha em código nem no compose. Agente e 6 testes funcionando.
+
+**Atenção:** o Postgres só lê a senha na criação do volume. Trocar `PG_PASSWORD` depois exige alterar a senha dentro do banco ou recriar o volume.

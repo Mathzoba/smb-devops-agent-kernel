@@ -64,7 +64,7 @@ pip install -e .
 ```
 
 Copie `.env.example` para `.env` e preencha `GROQ_API_KEY` e `PG_PASSWORD`
-(use `demo123`, a mesma senha do `docker-compose.yml`).
+(no ambiente-demo, use `demo123`).
 
 Se já existir um PostgreSQL instalado na máquina usando a porta 5432, defina outra porta
 no `.env` (ex.: `PG_PORT=5433`). O Docker e o código leem esse mesmo valor.
