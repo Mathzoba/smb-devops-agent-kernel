@@ -122,3 +122,23 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Alternativas consideradas:** mudar a porta do Grafana (rejeitado: mantém uma peça sem função, que adiciona atrito a quem clona o projeto).
 
 **Reversão:** reintroduzir se o Executive View (Blueprint, seção 25) precisar de dashboard, com justificativa registrada aqui.
+
+## 2026-10-20 — Evidence: separação entre fato observado e conclusão do LLM
+
+**Contexto:** o agente de triagem enviava texto cru ao LLM e deixava a comparação alerta × Prometheus a cargo do modelo. Em 18/08 foi registrado que o modelo "nem sempre" citava a falta de monitoramento.
+
+**Decisão:** criar a dataclass `Evidence` (tipo, fonte, timestamp, assunto, observacao). Evidências são produzidas por funções puras em Python (`alertas_para_evidencias`, `alvos_para_evidencias`), testadas sem banco nem rede. O `perceive()` coleta e transforma; o `plan()` só monta o prompt a partir das evidências. O fato "serviço não monitorado" passa a ser produzido pelo Python, não pelo LLM.
+
+**Evidência:** 4 testes automatizados passando, inclusive com o Docker desligado. Experimento manual (3 execuções por versão de prompt):
+- Prompt A: cita monitoramento na causa 3/3; confiança media 3/3; trata falta de monitoramento como causa do timeout 2/3.
+- Prompt B (adotado): cita monitoramento na causa 0/3 (só na próxima ação); confiança media/alta/media; trata como causa 0/3.
+
+**Alternativas consideradas:** continuar ajustando o prompt manualmente (rejeitado: cada ajuste corrigiu um comportamento e piorou outro; amostra de 3 execuções não permite conclusão confiável). Prompt B adotado porque inventar uma causa é mais perigoso do que omitir uma informação.
+
+**Limitações conhecidas:**
+- A comparação usa o nome do serviço do alerta = nome do job no Prometheus; nomes diferentes gerariam falso "não monitorado".
+- A confiança continua sendo autoavaliação do LLM e ignorou a instrução nas 6 execuções. Candidato a primeiro item do Stage 2: regra determinística (serviço sem monitoramento → confiança no máximo baixa), com teste.
+- Alertas duplicados no banco levaram o LLM a falar em "múltiplos timeouts".
+- O agente sugere "reiniciar" (ação mutante) mesmo com confiança não alta, em 4/6 execuções. Caso para o Eval Harness e o Risk Engine.
+
+**Reversão:** revisar o prompt quando o Eval Harness permitir comparar versões com amostra maior.
