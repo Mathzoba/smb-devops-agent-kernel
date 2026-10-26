@@ -1,10 +1,11 @@
 from datetime import datetime
+from kernel.schemas import Evidence
 from agente_triagem_incidentes import (
     alertas_para_evidencias,
     alvos_para_evidencias,
     evidencias_inexistentes,
+    limitar_confianca,
 )
-
 
 def test_alertas_viram_evidencias():
     linhas = [
@@ -56,3 +57,12 @@ def test_detecta_evidencia_inventada():
 
 def test_todas_evidencias_validas():
     assert evidencias_inexistentes(["E1", "E3"], total=3) == []
+
+def test_sem_monitoramento_limita_confianca():
+    evidencias = [Evidence("sem_monitoramento", "prometheus", "2026-10-26", "api-pagamentos", "x")]
+    assert limitar_confianca("alta", evidencias) == "baixa"
+
+
+def test_com_monitoramento_mantem_confianca():
+    evidencias = [Evidence("monitoramento", "prometheus", "2026-10-26", "api-pagamentos", "x")]
+    assert limitar_confianca("alta", evidencias) == "alta"

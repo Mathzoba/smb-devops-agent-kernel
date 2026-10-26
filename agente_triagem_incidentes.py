@@ -47,7 +47,7 @@ def alvos_para_evidencias(
     for servico in set(servicos_alertados):
         if servico not in monitorados:
             evidencias.append(Evidence(
-                tipo="monitoramento",
+                tipo="sem_monitoramento",
                 fonte="prometheus",
                 timestamp=coletado_em,
                 assunto=servico,
@@ -60,6 +60,12 @@ def evidencias_inexistentes(citadas: list[str], total: int) -> list[str]:
     """Devolve os ids citados que nao existem. Ex.: total=3 -> so E1, E2 e E3 sao validos."""
     validas = {f"E{numero}" for numero in range(1, total + 1)}
     return [citada for citada in citadas if citada not in validas]
+
+def limitar_confianca(confianca: str, evidencias: list[Evidence]) -> str:
+    """Regra: se algum servico alertado nao e monitorado, a confianca e no maximo 'baixa'."""
+    if any(e.tipo == "sem_monitoramento" for e in evidencias):
+        return "baixa"
+    return confianca
 
 
 # ---------- Agente ----------
@@ -125,6 +131,11 @@ class AgenteTriagemIncidentes(Agent):
         dados = json.loads(resposta.choices[0].message.content)
 
         hipotese = Hypothesis(**dados["hipotese"])
+        confianca_do_llm = hipotese.confianca
+        hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
+        if hipotese.confianca != confianca_do_llm:
+            print(f"Regra aplicada: confiança '{confianca_do_llm}' → '{hipotese.confianca}' (serviço sem monitoramento)")
+        hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
         recomendacao = Recommendation(**dados["recomendacao"])
         return {
             "evidencias": evidencias,
