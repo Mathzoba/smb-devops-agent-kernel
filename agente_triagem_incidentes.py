@@ -181,8 +181,8 @@ class AgenteTriagemIncidentes(Agent):
         print(f"Confiança: {hipotese.confianca}")
         print("=" * 50)
 
-        self.registrar_investigacao(evidencias, hipotese, recomendacao)
-
+        resultado = "evidencia_insuficiente" if abster else "conclusao"
+        self.registrar_investigacao(evidencias, hipotese, recomendacao, lacunas, resultado)
 
 if __name__ == "__main__":
     agente = AgenteTriagemIncidentes(nome="Agente de Triagem de Incidentes")

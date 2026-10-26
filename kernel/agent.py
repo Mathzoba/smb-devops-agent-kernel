@@ -1,4 +1,4 @@
-from kernel.schemas import Finding, Evidence, Hypothesis, Recommendation
+from kernel.schemas import Finding, Evidence, Hypothesis, Recommendation, Abstention
 from kernel.config import settings
 from abc import ABC, abstractmethod
 from dataclasses import asdict
@@ -67,17 +67,20 @@ class Agent(ABC):
         evidencias: list[Evidence],
         hipotese: Hypothesis,
         recomendacao: Recommendation,
+        lacunas: Abstention | None = None,
+        resultado: str = "conclusao",
     ) -> None:
-        """Formato novo: salva evidencias, hipotese e recomendacao completas."""
+        """Salva evidencias, hipotese, recomendacao e, se houver, as lacunas."""
         evidencias_json = json.dumps([asdict(e) for e in evidencias], ensure_ascii=False)
+        lacunas_json = json.dumps(asdict(lacunas), ensure_ascii=False) if lacunas else None
         conn = _conectar()
         try:
             cur = conn.cursor()
             cur.execute(
                 "INSERT INTO sugestoes_pendentes "
                 "(agente, causa_provavel, confianca, proxima_acao, "
-                "evidencias, evidencias_citadas, motivo, risco) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s);",
+                "evidencias, evidencias_citadas, motivo, risco, resultado, lacunas) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
                 (
                     self.nome,
                     hipotese.afirmacao,
@@ -87,6 +90,8 @@ class Agent(ABC):
                     ", ".join(hipotese.evidencias),
                     recomendacao.motivo,
                     recomendacao.risco,
+                    resultado,
+                    lacunas_json,
                 ),
             )
             conn.commit()

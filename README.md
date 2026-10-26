@@ -86,6 +86,7 @@ Roda os agentes e o painel:
 python agente_triagem_incidentes.py
 python agente_backup.py
 python painel.py
+python migracao_002_abstencao.py
 ```
 
 Roda os testes automatizados do kernel:
