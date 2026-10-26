@@ -249,3 +249,17 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Por que importa:** (1) gera dado real com resposta certa; (2) vira gabarito do Eval Harness; (3) é a memória episódica do Stage 6; (4) é o diferencial do Blueprint ("dados acumulados de resolução").
 
 **Por que não agora:** sem incidentes reais e sem técnicos usando o painel, o campo ficaria vazio ou com dado inventado.
+
+## 2026-10-26 — Alertas reais do Prometheus no lugar dos alertas inventados
+
+**Contexto:** experimento com o api-pagamentos real mostrou que o agente tratava alertas inseridos à mão (de dias atrás, que nunca fecham) como atuais. Com o serviço UP, afirmou problema no banco com confiança alta e sugeriu reiniciar o PostgreSQL.
+
+**Decisão:** regra `ServicoForaDoAr` (`up == 0` por 30s) no Prometheus; `PrometheusAlertasTool` lê só alertas `firing`; o agente de triagem passou a usar esses alertas em vez da tabela `alertas`. Sem alerta disparado, o agente responde "nenhum incidente ativo" sem chamar o LLM.
+
+**Evidência (gabarito conhecido):**
+- Serviço UP: antes, problema inventado + reiniciar banco; agora, "nenhum incidente ativo", sem custo de LLM.
+- Serviço DOWN: antes, "caiu por causa do banco"; agora, "api-pagamentos indisponível", citando E1 (alerta) e E3 (alvo caído), sem invenção.
+
+**Alternativa considerada:** janela de tempo nos alertas do banco (rejeitada: é remendo; o que importa é o estado do alerta, não a idade).
+
+**Limitações:** alerta e alvo caído vêm da mesma métrica (`up`), não são provas independentes. "Reiniciar" é mitigação, não causa raiz (Stage 4). A tabela `alertas` não é mais usada pelo agente de triagem.

@@ -1,4 +1,4 @@
-from tool_postgres_query import PostgresQueryTool
+from tool_prometheus_alertas import PrometheusAlertasTool
 from dotenv import load_dotenv
 from groq import Groq
 from kernel.config import settings
@@ -85,27 +85,23 @@ def alertas_prometheus_para_evidencias(alertas: list[dict]) -> list[Evidence]:
 
 class AgenteTriagemIncidentes(Agent):
     def perceive(self) -> dict:
-        # 1. Coleta (Tools, precisam de banco/rede)
-        dados_alertas = PostgresQueryTool().run(
-            query=(
-                "SELECT id, criado_em, servico, severidade, mensagem "
-                "FROM alertas ORDER BY criado_em DESC LIMIT 10;"
-            )
-        )
-        dados_prometheus = PrometheusUpTool().run()
+        # 1. Coleta (Tools, somente leitura)
+        alertas = PrometheusAlertasTool().run()["alertas"]
+        alvos = PrometheusUpTool().run()["alvos"]
 
         # 2. Transformacao em evidencia (funcoes puras, testadas)
-        linhas = dados_alertas["linhas"]
-        servicos_alertados = [alerta["servico"] for alerta in linhas]
+        servicos_alertados = [alerta["labels"]["job"] for alerta in alertas]
         coletado_em = str(datetime.now())
 
-        evidencias = alertas_para_evidencias(linhas)
-        evidencias += alvos_para_evidencias(
-            dados_prometheus["alvos"], servicos_alertados, coletado_em
-        )
-        return {"evidencias": evidencias}
+        evidencias = alertas_prometheus_para_evidencias(alertas)
+        evidencias += alvos_para_evidencias(alvos, servicos_alertados, coletado_em)
+
+        return {"evidencias": evidencias, "tem_incidente": len(alertas) > 0}
     
     def plan(self, contexto: dict) -> dict:
+                # Sem alerta disparado: nada a investigar, nao gasta LLM
+        if not contexto["tem_incidente"]:
+            return {"sem_incidente": True}
         evidencias = contexto["evidencias"]
 
         # Numera as evidencias: E1, E2, E3...
@@ -164,6 +160,9 @@ class AgenteTriagemIncidentes(Agent):
         }
 
     def act(self, plano: dict) -> None:
+        if plano.get("sem_incidente"):
+            print("✅ Nenhum incidente ativo. Nenhum alerta disparado no Prometheus.")
+            return
         evidencias = plano["evidencias"]
         hipotese = plano["hipotese"]
         recomendacao = plano["recomendacao"]

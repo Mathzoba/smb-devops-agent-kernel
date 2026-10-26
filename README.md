@@ -34,8 +34,9 @@ lógica específica — o ciclo de execução (`run()`) e o registro de sugestõ
 
 ## Agentes implementados
 
-- **Agente de Triagem de Incidentes** (`agente_triagem_incidentes.py`) — lê alertas do
-  banco, aponta causa provável e próximo passo.
+- **Agente de Triagem de Incidentes** (`agente_triagem_incidentes.py`) — lê os alertas
+  disparados no Prometheus, cruza com o status dos alvos, e responde com hipótese,
+  recomendação ou "evidência insuficiente". Sem alerta disparado, não chama o LLM.
 - **Agente de Backup & DR Verification** (`agente_backup.py`) — lê o status das rotinas de
   backup simuladas, aponta falhas e sugere ação.
 - **Agente de Infraestrutura** (`agente_infra.py`) — consulta métricas do Prometheus (via
