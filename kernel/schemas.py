@@ -17,7 +17,7 @@ class Evidence:
     Fato observado por uma Tool, produzido pelo codigo Python (nunca pelo LLM).
     Serve de base para a conclusao do agente.
     """
-    tipo: str        # "alerta" ou "monitoramento"
+    tipo: str        # "alerta" ou "monitoramento" ou "sem_monitoramento"
     fonte: str       # "postgres" ou "prometheus"
     timestamp: str   # quando o fato aconteceu ou foi coletado
     assunto: str     # servico a que o fato se refere, ex.: "api-pagamentos"
@@ -37,3 +37,10 @@ class Recommendation:
     acao: str                 # ex.: "Verificar logs do PostgreSQL"
     motivo: str               # por que essa acao ajuda
     risco: str                # "baixo", "medio" ou "alto"
+
+@dataclass
+class Abstention:
+    """Quando faltam provas: o que sabemos, o que nao sabemos e o que checar."""
+    sabemos: str
+    nao_sabemos: str
+    proxima_checagem: str

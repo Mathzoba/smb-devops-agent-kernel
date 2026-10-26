@@ -2,7 +2,7 @@ from tool_postgres_query import PostgresQueryTool
 from dotenv import load_dotenv
 from groq import Groq
 from kernel.config import settings
-from kernel.schemas import Evidence, Hypothesis, Recommendation
+from kernel.schemas import Evidence, Hypothesis, Recommendation, Abstention
 from kernel.agent import Agent
 import json
 from tool_prometheus_query import PrometheusUpTool
@@ -115,11 +115,15 @@ class AgenteTriagemIncidentes(Agent):
                         "Na hipótese, cite os números das evidências que a sustentam. "
                         "Falta de monitoramento é falta de evidência, não é a causa do problema. "
                         "Na recomendação, informe o risco de executar a ação. "
+                        "Em 'lacunas', diga o que as evidências mostram, o que elas NÃO "
+                        "permitem saber, e qual checagem traria a prova que falta. "
                         "Responda SOMENTE em JSON, exatamente neste formato: "
                         '{"hipotese": {"afirmacao": "...", "evidencias": ["E1"], '
                         '"confianca": "baixa|media|alta"}, '
                         '"recomendacao": {"acao": "...", "motivo": "...", '
-                        '"risco": "baixo|medio|alto"}}'
+                        '"risco": "baixo|medio|alto"}, '
+                        '"lacunas": {"sabemos": "...", "nao_sabemos": "...", '
+                        '"proxima_checagem": "..."}}'
                     ),
                 },
                 {
@@ -135,30 +139,46 @@ class AgenteTriagemIncidentes(Agent):
         hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
         if hipotese.confianca != confianca_do_llm:
             print(f"Regra aplicada: confiança '{confianca_do_llm}' → '{hipotese.confianca}' (serviço sem monitoramento)")
-        hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
+
         recomendacao = Recommendation(**dados["recomendacao"])
+        lacunas = Abstention(**dados["lacunas"])
+
         return {
             "evidencias": evidencias,
             "hipotese": hipotese,
             "recomendacao": recomendacao,
+            "lacunas": lacunas,
         }
 
     def act(self, plano: dict) -> None:
         evidencias = plano["evidencias"]
         hipotese = plano["hipotese"]
         recomendacao = plano["recomendacao"]
+        lacunas = plano["lacunas"]
+
+        # Regra: confianca baixa = o agente se abstem de concluir
+        abster = hipotese.confianca == "baixa"
 
         print("=" * 50)
         print(f"[{self.nome}] SUGESTÃO PENDENTE DE APROVAÇÃO HUMANA:")
-        print(f"Hipótese: {hipotese.afirmacao}")
+
+        if abster:
+            print("⚪ EVIDÊNCIA INSUFICIENTE — o agente não tem provas para concluir.")
+            print(f"O que sabemos: {lacunas.sabemos}")
+            print(f"O que NÃO sabemos: {lacunas.nao_sabemos}")
+            print(f"Próxima checagem: {lacunas.proxima_checagem}")
+            print(f"Hipótese (não confirmada): {hipotese.afirmacao}")
+        else:
+            print(f"Hipótese: {hipotese.afirmacao}")
+            print(f"Ação recomendada: {recomendacao.acao}")
+            print(f"Motivo: {recomendacao.motivo}")
+            print(f"Risco: {recomendacao.risco}")
+
         print(f"Baseada em: {', '.join(hipotese.evidencias)}")
         inventadas = evidencias_inexistentes(hipotese.evidencias, len(evidencias))
         if inventadas:
             print(f"⚠️ ATENÇÃO: o agente citou evidências que não existem: {', '.join(inventadas)}")
         print(f"Confiança: {hipotese.confianca}")
-        print(f"Ação recomendada: {recomendacao.acao}")
-        print(f"Motivo: {recomendacao.motivo}")
-        print(f"Risco: {recomendacao.risco}")
         print("=" * 50)
 
         self.registrar_investigacao(evidencias, hipotese, recomendacao)
