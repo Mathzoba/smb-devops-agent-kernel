@@ -229,3 +229,23 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Evidência:** 10 testes passando (2 novos: regra aplica / regra não aplica). 4 execuções: LLM disse "alta" 4/4, regra corrigiu para "baixa" 4/4.
 
 **Efeito colateral observado:** após a troca do `tipo`, o agente passou a citar E1, E2, E3 (E3 = prometheus monitorando a si mesmo, irrelevante) em vez de E1, E2, E4. Mudar um nome visível no prompt alterou o comportamento. Caso para o Eval Harness (precisão de evidência).
+
+## 2026-10-26 — Stage 2, passo 2: abstenção (evidência insuficiente)
+
+**Contexto:** mesmo com confiança baixa, o agente entregava causa e ação como se fosse conclusão.
+
+**Decisão:** ficha `Abstention` (sabemos, nao_sabemos, proxima_checagem), preenchida pelo LLM. Quem decide se o agente se abstém é o Python: confiança final "baixa" = resultado `evidencia_insuficiente`. Migração 002 (colunas `resultado` e `lacunas` JSONB); `registrar_investigacao()` salva os dois; painel exibe "⚪ EVIDÊNCIA INSUFICIENTE" com as lacunas e a hipótese marcada como "não confirmada".
+
+**Evidência:** 2 execuções em modo abstenção; lacunas coerentes; próxima checagem apontou métricas do PostgreSQL e monitoramento do api-pagamentos. Sugestão #6 gravada e exibida no painel.
+
+**Incidente durante o passo:** a tabela `sugestoes_pendentes` foi recriada (scripts de setup rodados de novo; `criar_tabela_sugestoes.py` tinha DROP TABLE). Histórico anterior perdido, incluindo a #21. Corrigido: script agora usa CREATE TABLE IF NOT EXISTS. `test_db.py` ainda duplica alertas (3 cópias) — tratar junto com dados de teste fixos.
+
+## 2026-10-26 — Requisito de produto: registro de resolução pelo técnico
+
+**Contexto:** o painel só permite aprovar ou rejeitar. Uma sugestão "evidência insuficiente" não tem ação a aprovar, e a resolução real do incidente se perde.
+
+**Decisão:** registrar como requisito (ideia do Matheus): o técnico deve poder registrar a **causa confirmada** e **o que foi feito**. Construir no Stage 4 (Approval), quando houver incidentes reais (api-pagamentos real, Zabbix, piloto).
+
+**Por que importa:** (1) gera dado real com resposta certa; (2) vira gabarito do Eval Harness; (3) é a memória episódica do Stage 6; (4) é o diferencial do Blueprint ("dados acumulados de resolução").
+
+**Por que não agora:** sem incidentes reais e sem técnicos usando o painel, o campo ficaria vazio ou com dado inventado.

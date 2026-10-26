@@ -98,3 +98,11 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Citar as evidências:** quando o agente cita E1, E2, E4, o técnico vê os dados reais que aconteceram e confere só esses. O ganho maior é conseguir ver quando o agente erra: numa execução ele disse que a E4 ("não é monitorado") provava que o serviço caiu. Olhando a E4 dá pra ver na hora que uma coisa não prova a outra. Sem a citação, esse erro ia passar escondido.
 
 **Alarme falso:** testar que a função devolve `[]` é tão importante quanto testar que ela pega o E9. Se o aviso aparecesse sem motivo, o técnico ia aprender a ignorar, e no dia que fosse verdade ninguém ia prestar atenção. É o menino que gritava lobo.
+
+## Abstenção: o agente saber dizer "não sei" (26/10/2026)
+
+**Quem decide se abster:** a decisão fica com o Python porque ele cumpre a regra sempre do mesmo jeito (confiança baixa = evidência insuficiente) e dá pra testar. O LLM ignorou a instrução de confiança em 6 de 6 execuções. Regra fica com o Python, interpretação fica com o LLM.
+
+**Ideia boa, mas não agora:** tive a ideia de o técnico registrar a causa real e o que foi feito pra resolver. É valiosa (vira dado real, gabarito pro Eval e memória do agente), mas não vou construir agora porque ninguém usa o painel ainda. O campo ia ficar vazio ou com dado inventado. Fica registrada pro Stage 4.
+
+**Script perigoso:** rodei de novo os scripts de setup e o `criar_tabela_sugestoes.py` apagou o histórico inteiro (tinha DROP TABLE). Script de setup tem que ser seguro de rodar duas vezes.
