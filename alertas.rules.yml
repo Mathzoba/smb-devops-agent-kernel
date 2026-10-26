@@ -1,0 +1,10 @@
+groups:
+  - name: disponibilidade
+    rules:
+      - alert: ServicoForaDoAr
+        expr: up == 0
+        for: 30s
+        labels:
+          severidade: critico
+        annotations:
+          resumo: "{{ $labels.job }} esta fora do ar"
