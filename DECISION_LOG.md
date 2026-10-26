@@ -219,3 +219,13 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Alternativas consideradas:** migrar backup e infra antes de fechar (rejeitado: cerca de 2 sessões de trabalho que mudariam de novo no Stage 2; o Blueprint pede construir a fundação em um caso antes de multiplicar).
 
 **Reversão:** migrar backup e infra quando o formato do Stage 2 estabilizar, ou se um deles virar prioridade de cliente.
+
+## 2026-10-26 — Stage 2, passo 1: confiança limitada por regra
+
+**Contexto:** o LLM ignorou a instrução de usar confiança baixa sem monitoramento em todas as execuções medidas (20/10 e 21/10).
+
+**Decisão:** função pura `limitar_confianca()`: se existir evidência `tipo="sem_monitoramento"`, a confiança vira "baixa", independente do LLM. O agente avisa na tela quando a regra corrige o LLM. A evidência de serviço não monitorado passou a ter tipo próprio (`sem_monitoramento`), para a regra não depender de procurar texto.
+
+**Evidência:** 10 testes passando (2 novos: regra aplica / regra não aplica). 4 execuções: LLM disse "alta" 4/4, regra corrigiu para "baixa" 4/4.
+
+**Efeito colateral observado:** após a troca do `tipo`, o agente passou a citar E1, E2, E3 (E3 = prometheus monitorando a si mesmo, irrelevante) em vez de E1, E2, E4. Mudar um nome visível no prompt alterou o comportamento. Caso para o Eval Harness (precisão de evidência).
