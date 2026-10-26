@@ -106,3 +106,13 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Ideia boa, mas não agora:** tive a ideia de o técnico registrar a causa real e o que foi feito pra resolver. É valiosa (vira dado real, gabarito pro Eval e memória do agente), mas não vou construir agora porque ninguém usa o painel ainda. O campo ia ficar vazio ou com dado inventado. Fica registrada pro Stage 4.
 
 **Script perigoso:** rodei de novo os scripts de setup e o `criar_tabela_sugestoes.py` apagou o histórico inteiro (tinha DROP TABLE). Script de setup tem que ser seguro de rodar duas vezes.
+
+## Alertas reais: o agente acertou sem mudar o prompt (26/10/2026)
+
+**Por que acertou:** agora o agente se baseia em dados reais e atuais, e não nos alertas fictícios que eu tinha criado na tabela. Os alertas da tabela nunca fechavam, então um alerta de dias atrás parecia ser de agora. Os alertas do Prometheus têm estado: só aparecem enquanto o problema está acontecendo e se resolvem sozinhos.
+
+**A lição:** a qualidade da evidência importa mais do que o modelo. Com dado velho, o agente inventou um problema no banco e sugeriu reiniciar o PostgreSQL. Com dado atual, acertou citando só as provas certas.
+
+**Economia:** sem alerta disparado, o agente não chama o LLM. Num cliente, a maioria das execuções é "tudo bem", então isso economiza tokens e dinheiro.
+
+**Gabarito:** quando eu mesmo causo o incidente (derrubando o container), eu sei a resposta certa e consigo dar nota pro agente.
