@@ -67,6 +67,19 @@ def limitar_confianca(confianca: str, evidencias: list[Evidence]) -> str:
         return "baixa"
     return confianca
 
+def alertas_prometheus_para_evidencias(alertas: list[dict]) -> list[Evidence]:
+    """Transforma alertas disparados do Prometheus em evidencias. Funcao pura."""
+    evidencias = []
+    for alerta in alertas:
+        evidencias.append(Evidence(
+            tipo="alerta",
+            fonte="prometheus",
+            timestamp=alerta["activeAt"],
+            assunto=alerta["labels"]["job"],
+            observacao=f"[{alerta['labels']['severidade']}] {alerta['annotations']['resumo']}",
+        ))
+    return evidencias
+
 
 # ---------- Agente ----------
 

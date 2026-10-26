@@ -5,6 +5,7 @@ from agente_triagem_incidentes import (
     alvos_para_evidencias,
     evidencias_inexistentes,
     limitar_confianca,
+    alertas_prometheus_para_evidencias,
 )
 
 def test_alertas_viram_evidencias():
@@ -66,3 +67,19 @@ def test_sem_monitoramento_limita_confianca():
 def test_com_monitoramento_mantem_confianca():
     evidencias = [Evidence("monitoramento", "prometheus", "2026-10-26", "api-pagamentos", "x")]
     assert limitar_confianca("alta", evidencias) == "alta"
+
+def test_alerta_prometheus_vira_evidencia():
+    alertas = [{
+        "labels": {"alertname": "ServicoForaDoAr", "job": "api-pagamentos",
+                   "instance": "api-pagamentos:8080", "severidade": "critico"},
+        "annotations": {"resumo": "api-pagamentos esta fora do ar"},
+        "state": "firing",
+        "activeAt": "2026-10-26T21:30:00Z",
+    }]
+
+    evidencias = alertas_prometheus_para_evidencias(alertas)
+
+    assert len(evidencias) == 1
+    assert evidencias[0].fonte == "prometheus"
+    assert evidencias[0].assunto == "api-pagamentos"
+    assert evidencias[0].observacao == "[critico] api-pagamentos esta fora do ar"
