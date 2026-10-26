@@ -6,9 +6,9 @@ def evidencias_citadas_por_extenso(evidencias: list, citadas: str) -> list[str]:
     """Pega 'E1, E4' e devolve o texto da E1 e da E4. Funcao pura."""
     linhas = []
     for id_ in citadas.split(", "):
-        numero = int(id_[1:])                 # "E4" -> 4
+        numero = int(id_[1:])
         if 1 <= numero <= len(evidencias):
-            e = evidencias[numero - 1]        # E1 fica na posicao 0 da lista
+            e = evidencias[numero - 1]
             linhas.append(f"  {id_}: [{e['fonte']}] {e['assunto']}: {e['observacao']}")
         else:
             linhas.append(f"  {id_}: ⚠️ evidência não existe")
@@ -26,7 +26,7 @@ try:
     cur = conn.cursor()
     cur.execute(
         "SELECT id, criado_em, agente, causa_provavel, confianca, proxima_acao, "
-        "motivo, risco, evidencias, evidencias_citadas "
+        "motivo, risco, evidencias, evidencias_citadas, resultado, lacunas "
         "FROM sugestoes_pendentes WHERE status = 'pendente' ORDER BY criado_em DESC;"
     )
     sugestoes = cur.fetchall()
@@ -35,16 +35,25 @@ try:
         print("Nenhuma sugestão pendente.")
     else:
         for (id_, criado_em, agente, causa, confianca, acao,
-             motivo, risco, evidencias, citadas) in sugestoes:
+             motivo, risco, evidencias, citadas, resultado, lacunas) in sugestoes:
             print("=" * 60)
             print(f"#{id_} | {agente} | {criado_em}")
             print("-" * 60)
-            print(f"Hipótese: {causa}")
+
+            if resultado == "evidencia_insuficiente" and lacunas:
+                print("⚪ EVIDÊNCIA INSUFICIENTE — o agente não tem provas para concluir.")
+                print(f"O que sabemos: {lacunas['sabemos']}")
+                print(f"O que NÃO sabemos: {lacunas['nao_sabemos']}")
+                print(f"Próxima checagem: {lacunas['proxima_checagem']}")
+                print(f"Hipótese (não confirmada): {causa}")
+            else:
+                print(f"Hipótese: {causa}")
+                print(f"Ação: {acao}")
+                if motivo:
+                    print(f"Motivo: {motivo}")
+                    print(f"Risco: {risco}")
+
             print(f"Confiança: {confianca}")
-            print(f"Ação: {acao}")
-            if motivo:
-                print(f"Motivo: {motivo}")
-                print(f"Risco: {risco}")
             if evidencias and citadas:
                 print(f"Baseada em ({citadas}):")
                 for linha in evidencias_citadas_por_extenso(evidencias, citadas):
