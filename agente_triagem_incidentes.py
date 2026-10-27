@@ -1,6 +1,6 @@
 from tool_prometheus_alertas import PrometheusAlertasTool
 from dotenv import load_dotenv
-from groq import Groq
+from groq import Groq, APIError
 from kernel.config import settings
 from kernel.schemas import Evidence, Hypothesis, Recommendation, Abstention
 from kernel.agent import Agent
@@ -98,17 +98,44 @@ class AgenteTriagemIncidentes(Agent):
         return montar_contexto(alertas, alvos, str(datetime.now()))
     
     def plan(self, contexto: dict) -> dict:
-                # Sem alerta disparado: nada a investigar, nao gasta LLM
+        # Sem alerta disparado: nada a investigar, nao gasta LLM
         if not contexto["tem_incidente"]:
             return {"sem_incidente": True}
-        evidencias = contexto["evidencias"]
 
-        # Numera as evidencias: E1, E2, E3...
+        evidencias = contexto["evidencias"]
         texto_evidencias = "\n".join(
             f"E{numero}: [{e.fonte}/{e.tipo}] {e.assunto}: {e.observacao} (em {e.timestamp})"
             for numero, e in enumerate(evidencias, start=1)
         )
 
+        # Ate 2 tentativas: falha do LLM costuma ser passageira
+        resposta = None
+        for tentativa in range(1, 3):
+            try:
+                resposta = self._analisar(texto_evidencias)
+                break
+            except (APIError, json.JSONDecodeError, KeyError, TypeError) as falha:
+                print(f"Tentativa {tentativa} falhou: {type(falha).__name__}")
+
+        if resposta is None:
+            return {"falha_analise": True, "evidencias": evidencias}
+
+        hipotese, recomendacao, lacunas = resposta
+
+        confianca_do_llm = hipotese.confianca
+        hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
+        if hipotese.confianca != confianca_do_llm:
+            print(f"Regra aplicada: confiança '{confianca_do_llm}' → '{hipotese.confianca}' (serviço sem monitoramento)")
+
+        return {
+            "evidencias": evidencias,
+            "hipotese": hipotese,
+            "recomendacao": recomendacao,
+            "lacunas": lacunas,
+        }
+
+    def _analisar(self, texto_evidencias: str):
+        """Pergunta ao LLM e monta as fichas. Pode levantar erro se a resposta vier com defeito."""
         client = Groq(api_key=settings.GROQ_API_KEY)
         resposta = client.chat.completions.create(
             model="openai/gpt-oss-120b",
@@ -134,33 +161,25 @@ class AgenteTriagemIncidentes(Agent):
                         '"proxima_checagem": "..."}}'
                     ),
                 },
-                {
-                    "role": "user",
-                    "content": f"Evidências:\n{texto_evidencias}",
-                },
+                {"role": "user", "content": f"Evidências:\n{texto_evidencias}"},
             ],
         )
         dados = json.loads(resposta.choices[0].message.content)
-
-        hipotese = Hypothesis(**dados["hipotese"])
-        confianca_do_llm = hipotese.confianca
-        hipotese.confianca = limitar_confianca(hipotese.confianca, evidencias)
-        if hipotese.confianca != confianca_do_llm:
-            print(f"Regra aplicada: confiança '{confianca_do_llm}' → '{hipotese.confianca}' (serviço sem monitoramento)")
-
-        recomendacao = Recommendation(**dados["recomendacao"])
-        lacunas = Abstention(**dados["lacunas"])
-
-        return {
-            "evidencias": evidencias,
-            "hipotese": hipotese,
-            "recomendacao": recomendacao,
-            "lacunas": lacunas,
-        }
+        return (
+            Hypothesis(**dados["hipotese"]),
+            Recommendation(**dados["recomendacao"]),
+            Abstention(**dados["lacunas"]),
+        )
 
     def act(self, plano: dict) -> None:
         if plano.get("sem_incidente"):
             print("✅ Nenhum incidente ativo. Nenhum alerta disparado no Prometheus.")
+            return
+        if plano.get("falha_analise"):
+            print("⚠️ FALHA AO ANALISAR: o LLM não devolveu resposta válida após 2 tentativas.")
+            print("Evidências coletadas (fatos, sem análise):")
+            for numero, e in enumerate(plano["evidencias"], start=1):
+                print(f"  E{numero}: [{e.fonte}] {e.assunto}: {e.observacao}")
             return
         evidencias = plano["evidencias"]
         hipotese = plano["hipotese"]

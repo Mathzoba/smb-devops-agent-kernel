@@ -18,9 +18,12 @@ def avaliar(plano: dict, gabarito: dict) -> list[str]:
     if plano.get("sem_incidente"):
         return ["deveria investigar, mas disse 'nenhum incidente'"]
 
+    if plano.get("falha_analise"):
+        return ["falha ao analisar (LLM não respondeu válido em 2 tentativas)"]
+
     hipotese = plano["hipotese"]
     citadas = set(hipotese.evidencias)
-
+    
     for e in gabarito.get("deve_citar", []):
         if e not in citadas:
             erros.append(f"não citou {e}")
