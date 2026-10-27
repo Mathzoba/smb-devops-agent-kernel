@@ -6,6 +6,7 @@ from agente_triagem_incidentes import (
     evidencias_inexistentes,
     limitar_confianca,
     alertas_prometheus_para_evidencias,
+    montar_contexto,
 )
 
 def test_alertas_viram_evidencias():
@@ -83,3 +84,14 @@ def test_alerta_prometheus_vira_evidencia():
     assert evidencias[0].fonte == "prometheus"
     assert evidencias[0].assunto == "api-pagamentos"
     assert evidencias[0].observacao == "[critico] api-pagamentos esta fora do ar"
+
+def test_montar_contexto_sem_alerta_nao_tem_incidente():
+    alvos = [
+        {"job": "prometheus", "instance": "localhost:9090", "status": "ativo"},
+        {"job": "api-pagamentos", "instance": "api-pagamentos:8080", "status": "ativo"},
+    ]
+
+    contexto = montar_contexto([], alvos, "2026-10-27 09:00:00")
+
+    assert contexto["tem_incidente"] is False
+    assert len(contexto["evidencias"]) == 2

@@ -80,23 +80,22 @@ def alertas_prometheus_para_evidencias(alertas: list[dict]) -> list[Evidence]:
         ))
     return evidencias
 
+def montar_contexto(alertas: list[dict], alvos: list[dict], coletado_em: str) -> dict:
+    """Recebe dados brutos (alertas e alvos) e monta as evidencias. Funcao pura."""
+    servicos_alertados = [alerta["labels"]["job"] for alerta in alertas]
+    evidencias = alertas_prometheus_para_evidencias(alertas)
+    evidencias += alvos_para_evidencias(alvos, servicos_alertados, coletado_em)
+    return {"evidencias": evidencias, "tem_incidente": len(alertas) > 0}
+
 
 # ---------- Agente ----------
 
 class AgenteTriagemIncidentes(Agent):
     def perceive(self) -> dict:
-        # 1. Coleta (Tools, somente leitura)
+        # Coleta (Tools, somente leitura). A montagem das evidencias fica na funcao pura.
         alertas = PrometheusAlertasTool().run()["alertas"]
         alvos = PrometheusUpTool().run()["alvos"]
-
-        # 2. Transformacao em evidencia (funcoes puras, testadas)
-        servicos_alertados = [alerta["labels"]["job"] for alerta in alertas]
-        coletado_em = str(datetime.now())
-
-        evidencias = alertas_prometheus_para_evidencias(alertas)
-        evidencias += alvos_para_evidencias(alvos, servicos_alertados, coletado_em)
-
-        return {"evidencias": evidencias, "tem_incidente": len(alertas) > 0}
+        return montar_contexto(alertas, alvos, str(datetime.now()))
     
     def plan(self, contexto: dict) -> dict:
                 # Sem alerta disparado: nada a investigar, nao gasta LLM
