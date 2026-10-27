@@ -124,3 +124,11 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Por que o UP tirou 10/10 e o DOWN variou:** o cenário UP é resolvido pela regra que colocamos no Python (sem alerta = sem incidente), então dá sempre igual. O DOWN é respondido pelo LLM, onde não tem regra, e ele varia. Rodei duas vezes sem mudar nada e deu 5/5 e depois 3/5.
 
 **Lição:** uma rodada só engana. A nota real do DOWN é 8 de 10 (80%). Essa é a linha de base: toda mudança daqui pra frente tem que ser comparada com ela.
+
+## Experimento rejeitado e agente resiliente (27/10/2026)
+
+**"Cite TODAS" piorou o agente:** testando bastante consigo enxergar as falhas reais e como o agente varia. Achei que pedir "cite TODAS as evidências" ia resolver o erro de não citar a E3, mas a nota caiu de 85% pra 75%: ele passou a citar evidência irrelevante (E2). Consertei um erro e criei outro. Sem o Eval eu teria mantido a mudança. A decisão é pelo número, não pela impressão.
+
+**Capturar só os erros esperados:** o agente pega só os erros que vêm do LLM (APIError, JSON quebrado, campo faltando). Se pegasse qualquer erro (Exception), um erro de digitação no meu código também seria escondido como "falha do LLM", e eu nunca ia achar o bug. É como desligar todos os alarmes por causa de um que dispara à toa.
+
+**Os fatos sobrevivem:** quando o LLM falha, o agente ainda mostra as evidências, porque elas são feitas pelo Python e não dependem da IA.

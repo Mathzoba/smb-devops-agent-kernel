@@ -289,3 +289,13 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Decisão:** mudança desfeita (critério combinado antes de rodar: só manter se subir).
 
 **Achado extra:** uma rodada quebrou com `groq.BadRequestError` (JSON malformado gerado pelo LLM), derrubando a execução inteira. Runner agora conta falha técnica como erro e continua. Agente real ainda não trata essa falha (backlog prioritário: tentar de novo e registrar "falha ao analisar").
+
+## 2026-10-27 — Agente resiliente a falhas do LLM
+
+**Contexto:** no Eval, o LLM gerou JSON malformado (`groq.BadRequestError`) e o agente quebrou inteiro. Num incidente real, o técnico ficaria sem nada.
+
+**Decisão:** a chamada ao LLM foi isolada em `_analisar()`. O `plan()` tenta até 2 vezes, capturando só os erros esperados (`APIError`, `JSONDecodeError`, `KeyError`, `TypeError`); outros erros continuam parando o programa, para bugs não ficarem escondidos. Se as 2 tentativas falharem, o plano devolve `falha_analise` e o `act()` mostra as evidências coletadas, sem análise. O runner conta `falha_analise` como erro.
+
+**Evidência:** teste com modelo inexistente: 2 tentativas, aviso de falha e as 3 evidências exibidas, sem quebrar. O Eval com o modelo errado caiu para 5/15, mostrando que pega esse tipo de regressão.
+
+**Limitação:** a falha ainda não é salva no banco nem aparece no painel.
