@@ -32,6 +32,8 @@ def avaliar(plano: dict, gabarito: dict) -> list[str]:
             erros.append(f"hipótese fala de '{palavra}' sem prova")
     if gabarito.get("deve_concluir") and hipotese.confianca == "baixa":
         erros.append("se absteve, mas havia prova suficiente")
+    if gabarito.get("deve_abster") and hipotese.confianca != "baixa":
+        erros.append("deveria se abster (sem prova), mas concluiu")
 
     return erros
 

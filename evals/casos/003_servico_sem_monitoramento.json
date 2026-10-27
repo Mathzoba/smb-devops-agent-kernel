@@ -1,0 +1,19 @@
+{
+  "nome": "Alerta de servico nao monitorado (api-estoque)",
+  "alertas": [
+    {
+      "labels": {"alertname": "ServicoForaDoAr", "job": "api-estoque",
+                 "instance": "api-estoque:8080", "severidade": "critico"},
+      "annotations": {"resumo": "api-estoque esta fora do ar"},
+      "state": "firing",
+      "activeAt": "2026-10-27T10:00:00Z"
+    }
+  ],
+  "alvos": [
+    {"job": "prometheus", "instance": "localhost:9090", "status": "ativo"},
+    {"job": "api-pagamentos", "instance": "api-pagamentos:8080", "status": "ativo"}
+  ],
+  "gabarito": {
+    "deve_abster": true
+  }
+}
