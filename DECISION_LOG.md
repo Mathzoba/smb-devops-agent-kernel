@@ -263,3 +263,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Alternativa considerada:** janela de tempo nos alertas do banco (rejeitada: é remendo; o que importa é o estado do alerta, não a idade).
 
 **Limitações:** alerta e alvo caído vêm da mesma métrica (`up`), não são provas independentes. "Reiniciar" é mitigação, não causa raiz (Stage 4). A tabela `alertas` não é mais usada pelo agente de triagem.
+
+## 2026-10-27 — Eval Harness mínimo (antecipa o Stage 3)
+
+**Contexto:** mudanças de prompt, de nome de campo e de fonte de dados mudaram o comportamento do agente, e tudo era medido à mão (3 execuções, comparação no olho).
+
+**Decisão:** antecipar um Eval mínimo antes de continuar o Stage 2. `montar_contexto()` extraído como função pura (mesmo caminho do agente real). Cenários em JSON em `evals/casos/` (dados + gabarito). `evals/runner.py` roda só o `plan()` (não busca dado real, não salva no banco), 5 rodadas por cenário, e imprime a nota. `avaliar()` é função pura.
+
+**Linha de base (27/10/2026):**
+- 001 Serviço UP: 10/10 (regra em Python, sem LLM).
+- 002 Serviço DOWN: 8/10 (duas execuções: 5/5 e 3/5). Erro único: não citou E3 (alvo caído).
+
+**Limitações:** a regra "proibido_na_hipotese" procura palavras (frágil, serve para detectar erro conhecido). 5 rodadas é amostra pequena; uma execução sozinha engana (deu 5/5 e depois 3/5 sem mudar nada).

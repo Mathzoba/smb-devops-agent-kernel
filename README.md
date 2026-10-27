@@ -94,6 +94,10 @@ Roda os testes automatizados do kernel:
 ```bash
 pytest
 ```
+Roda o Eval Harness (cenários com gabarito, 5 rodadas cada; chama o LLM):
+```bash
+python -m evals.runner
+```
 
 ## Status e próximos passos
 
