@@ -277,3 +277,15 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 - 002 acumulado (4 execuções de 5): 17/20.
 
 **Limitações:** a regra "proibido_na_hipotese" procura palavras (frágil, serve para detectar erro conhecido). 5 rodadas é amostra pequena; uma execução sozinha engana (deu 5/5 e depois 3/5 sem mudar nada).
+
+## 2026-10-27 — Experimento rejeitado: "cite TODAS as evidências"
+
+**Hipótese (Matheus):** o LLM às vezes não cita E3 porque acha que E1 já basta (redundância); o prompt dizia "cite as evidências", sem "todas".
+
+**Mudança testada:** prompt pedindo "TODAS as evidências que sustentam, inclusive as que confirmam o mesmo fato por outra fonte".
+
+**Resultado (20 rodadas completas do DOWN):** 15/20, contra 17/20 da linha de base. O erro mudou de "não citou E3" para "citou E2 (irrelevante)": o LLM passou a citar demais. 001 e 003 seguiram 100%.
+
+**Decisão:** mudança desfeita (critério combinado antes de rodar: só manter se subir).
+
+**Achado extra:** uma rodada quebrou com `groq.BadRequestError` (JSON malformado gerado pelo LLM), derrubando a execução inteira. Runner agora conta falha técnica como erro e continua. Agente real ainda não trata essa falha (backlog prioritário: tentar de novo e registrar "falha ao analisar").

@@ -53,8 +53,11 @@ def main():
         print(f"Cenário: {caso['nome']}")
         passou = 0
         for rodada in range(1, RODADAS + 1):
-            plano = agente.plan(contexto)
-            erros = avaliar(plano, caso["gabarito"])
+            try:
+                plano = agente.plan(contexto)
+                erros = avaliar(plano, caso["gabarito"])
+            except Exception as falha:
+                erros = [f"falha técnica: {type(falha).__name__}"]
             if erros:
                 print(f"  rodada {rodada}: ❌ " + "; ".join(erros))
             else:
