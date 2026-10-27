@@ -116,3 +116,11 @@ O problema real é que a confiança caiu então essa parte funcionou, mas a caus
 **Economia:** sem alerta disparado, o agente não chama o LLM. Num cliente, a maioria das execuções é "tudo bem", então isso economiza tokens e dinheiro.
 
 **Gabarito:** quando eu mesmo causo o incidente (derrubando o container), eu sei a resposta certa e consigo dar nota pro agente.
+
+## Eval Harness: a primeira nota do agente (27/10/2026)
+
+**O que é:** cenários com gabarito em arquivos JSON (situação + resposta certa). O runner roda o agente 5 vezes em cada cenário e dá a nota. Só roda o plan(): não busca dado real e não salva no banco.
+
+**Por que o UP tirou 10/10 e o DOWN variou:** o cenário UP é resolvido pela regra que colocamos no Python (sem alerta = sem incidente), então dá sempre igual. O DOWN é respondido pelo LLM, onde não tem regra, e ele varia. Rodei duas vezes sem mudar nada e deu 5/5 e depois 3/5.
+
+**Lição:** uma rodada só engana. A nota real do DOWN é 8 de 10 (80%). Essa é a linha de base: toda mudança daqui pra frente tem que ser comparada com ela.
