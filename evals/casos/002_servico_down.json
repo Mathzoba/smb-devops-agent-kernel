@@ -1,0 +1,22 @@
+{
+  "nome": "api-pagamentos fora do ar (alerta disparado + alvo caido)",
+  "alertas": [
+    {
+      "labels": {"alertname": "ServicoForaDoAr", "job": "api-pagamentos",
+                 "instance": "api-pagamentos:8080", "severidade": "critico"},
+      "annotations": {"resumo": "api-pagamentos esta fora do ar"},
+      "state": "firing",
+      "activeAt": "2026-10-26T21:30:00Z"
+    }
+  ],
+  "alvos": [
+    {"job": "prometheus", "instance": "localhost:9090", "status": "ativo"},
+    {"job": "api-pagamentos", "instance": "api-pagamentos:8080", "status": "caido"}
+  ],
+  "gabarito": {
+    "deve_citar": ["E1", "E3"],
+    "nao_deve_citar": ["E2"],
+    "proibido_na_hipotese": ["banco", "postgres"],
+    "deve_concluir": true
+  }
+}

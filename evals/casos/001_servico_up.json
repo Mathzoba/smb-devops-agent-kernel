@@ -1,0 +1,11 @@
+{
+  "nome": "Servico UP, nenhum alerta disparado",
+  "alertas": [],
+  "alvos": [
+    {"job": "prometheus", "instance": "localhost:9090", "status": "ativo"},
+    {"job": "api-pagamentos", "instance": "api-pagamentos:8080", "status": "ativo"}
+  ],
+  "gabarito": {
+    "sem_incidente": true
+  }
+}
