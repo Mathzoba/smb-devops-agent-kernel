@@ -273,5 +273,7 @@ registrado como candidato a métrica do Eval Harness (Stage 3), não como bug a 
 **Linha de base (27/10/2026):**
 - 001 Serviço UP: 10/10 (regra em Python, sem LLM).
 - 002 Serviço DOWN: 8/10 (duas execuções: 5/5 e 3/5). Erro único: não citou E3 (alvo caído).
+- 003 Serviço sem monitoramento: 10/10. O LLM sugeriu "media" ou "alta" em 10/10 rodadas; a regra corrigiu para "baixa" em todas. Sem a regra, 0/10.
+- 002 acumulado (4 execuções de 5): 17/20.
 
 **Limitações:** a regra "proibido_na_hipotese" procura palavras (frágil, serve para detectar erro conhecido). 5 rodadas é amostra pequena; uma execução sozinha engana (deu 5/5 e depois 3/5 sem mudar nada).
